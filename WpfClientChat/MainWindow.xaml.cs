@@ -16,6 +16,7 @@ namespace WpfClientChat
     public partial class MainWindow : Window
     {
         HubConnection connection;
+        DateTime dtNow = DateTime.UtcNow;
         private readonly string username;
         public MainWindow(string userName)
         {
@@ -31,7 +32,7 @@ namespace WpfClientChat
             {
                 Dispatcher.Invoke(() =>
                 {
-                    var newMessage = $"{user}: {message}";
+                    var newMessage = $"{dtNow:HH:mm} {user}: {message}";
                     chatbox.Items.Insert(0, newMessage);
                 });
             });

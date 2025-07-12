@@ -44,14 +44,66 @@ namespace WpfClientChat
             }
         }
 
-        private void Login_Click(object sender, RoutedEventArgs e)
+        private async void Login_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                string username = usernameBox.Text.Trim();
+                string password = passwordBox.Password;
 
+                if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+                {
+                    MessageBox.Show("Введите логин и пароль");
+                    return;
+                }
+
+                bool result = await connection.InvokeAsync<bool>("Login", username, password);
+
+                if (result)
+                {
+                    AuthenticatedUsername = username;
+                    DialogResult = true;
+                    Close();
+                }
+                else
+                {
+                    MessageBox.Show("Неверный логин или пароль.");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при входе: {ex.Message}");
+            }
         }
 
-        private void Register_Click(object sender, RoutedEventArgs e)
+        private async void Register_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                string username = usernameBox.Text.Trim();
+                string password = passwordBox.Password;
 
+                if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+                {
+                    MessageBox.Show("Введите логин и пароль");
+                    return;
+                }
+
+                bool result = await connection.InvokeAsync<bool>("Register", username, password);
+
+                if (result)
+                {
+                    MessageBox.Show("Регистрация успешна. Теперь вы можете войти.");
+                }
+                else
+                {
+                    MessageBox.Show("Пользователь уже существует.");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при регистрации: {ex.Message}");
+            }
         }
     }
 }

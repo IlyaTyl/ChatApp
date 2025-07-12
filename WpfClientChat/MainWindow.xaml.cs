@@ -32,12 +32,11 @@ namespace WpfClientChat
                 .WithAutomaticReconnect()
                 .Build();
 
-            connection.On<string, string>("Receive", (user, message) =>
+            connection.On<Message>("Receive", (chatMessage) =>
             {
                 Dispatcher.Invoke(() =>
                 {
-                    var newMessage = $"{dtNow:HH:mm} {user}: {message}";
-                    chatbox.Items.Add(newMessage);
+                    chatbox.Items.Add(chatMessage);
 
                     if(userAtBottom)
                         chatbox.ScrollIntoView(chatbox.Items[chatbox.Items.Count - 1]);
@@ -51,7 +50,6 @@ namespace WpfClientChat
             {
                 await connection.StartAsync();
                 await LoadHistoryAsync();
-                chatbox.Items.Add("Вы вошли в чат");
                 sendBtn.IsEnabled = true;
                 return true;
             }
@@ -70,7 +68,7 @@ namespace WpfClientChat
 
                 foreach (var msg in messages.OrderBy(m => m.SentAt))
                 {
-                    chatbox.Items.Add($"{msg.SentAt:HH:mm} {msg.UserName}: {msg.Text}");
+                    chatbox.Items.Add(msg);
                 }
 
                 if (chatbox.Items.Count > 0)
@@ -80,7 +78,7 @@ namespace WpfClientChat
             }
             catch (Exception ex)
             {
-                chatbox.Items.Add("Ошибка при загрузке истории: " + ex.Message);
+                MessageBox.Show($"Ошибка при загрузке истории: {ex.Message}");
             }
         }
 
@@ -110,7 +108,7 @@ namespace WpfClientChat
             }
             catch (Exception ex)
             {
-                chatbox.Items.Add($"Ошибка отправки: {ex.Message}");
+                MessageBox.Show($"Ошибка отправки: {ex.Message}");
             }
         }
 

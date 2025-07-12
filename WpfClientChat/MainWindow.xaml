@@ -4,11 +4,24 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfClientChat"
+        xmlns:shared="clr-namespace:SignalRAppChat.Shared.Models;assembly=SignalRAppChat.Shared"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="300" Closing="Window_Closing">
     <StackPanel Margin="4">
-        <ListBox x:Name="chatbox" Height="360" Loaded="chatbox_Loaded" ScrollViewer.ScrollChanged="chatbox_ScrollChanged"/>
-        <TextBox x:Name="messageTextBox" />
+        <ListBox x:Name="chatbox" Height="360" Loaded="chatbox_Loaded" ScrollViewer.ScrollChanged="chatbox_ScrollChanged">
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type shared:Message}">
+                    <TextBlock>
+                        <Run Text="{Binding SentAt, StringFormat='{}{0:HH:mm}'}"/>
+                        <Run Text=" " />
+                        <Run Text="{Binding UserName}" FontWeight="Bold" />
+                        <Run Text=": " />
+                        <Run Text="{Binding Text}" />
+                    </TextBlock>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+            <TextBox x:Name="messageTextBox" />
         <Button x:Name="sendBtn" Content="Отправить" Click="Button_Click" IsEnabled="False" />
     </StackPanel>
 </Window>

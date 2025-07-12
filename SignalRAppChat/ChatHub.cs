@@ -33,7 +33,7 @@ namespace SignalRAppChat
             context.Messages.Add(chatMessage);
             await context.SaveChangesAsync();
 
-            await this.Clients.All.SendAsync("Receive", username, message);
+            await this.Clients.All.SendAsync("Receive", chatMessage);
         }
 
         public async Task<bool> Register(string username, string password)

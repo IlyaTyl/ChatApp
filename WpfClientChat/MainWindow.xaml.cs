@@ -18,6 +18,10 @@ namespace WpfClientChat
         HubConnection connection;
         DateTime dtNow = DateTime.UtcNow;
         private readonly string username;
+
+        private ScrollViewer? chatScrollViewer;
+        private bool userAtBottom = true;
+
         public MainWindow(string userName)
         {
             InitializeComponent();
@@ -34,7 +38,9 @@ namespace WpfClientChat
                 {
                     var newMessage = $"{dtNow:HH:mm} {user}: {message}";
                     chatbox.Items.Add(newMessage);
-                    chatbox.ScrollIntoView(newMessage);
+
+                    if(userAtBottom)
+                        chatbox.ScrollIntoView(chatbox.Items[chatbox.Items.Count - 1]);
                 });
             });
         }
@@ -78,7 +84,18 @@ namespace WpfClientChat
             }
         }
 
+        private ScrollViewer GetScrollViewer(DependencyObject depObj)
+        {
+            if(depObj is ScrollViewer) return (ScrollViewer)depObj;
 
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+            {
+                var child = VisualTreeHelper.GetChild(depObj, i);
+                var result = GetScrollViewer(child);
+                if (result != null) return result;
+            }
+            return null!;
+        }
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
@@ -111,6 +128,18 @@ namespace WpfClientChat
             {
                 MessageBox.Show($"Ошибка при отключении: {ex.Message}");
             }
+        }
+
+        private void chatbox_Loaded(object sender, RoutedEventArgs e)
+        {
+            chatScrollViewer = GetScrollViewer(chatbox);
+        }
+
+        private void chatbox_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (chatScrollViewer == null) return;
+
+            userAtBottom = chatScrollViewer.VerticalOffset >= chatScrollViewer.ScrollableHeight - 1;
         }
     }
 }

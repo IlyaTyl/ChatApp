@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="300" Closing="Window_Closing">
     <StackPanel Margin="4">
-        <ListBox x:Name="chatbox" Height="360" />
+        <ListBox x:Name="chatbox" Height="360" Loaded="chatbox_Loaded" ScrollViewer.ScrollChanged="chatbox_ScrollChanged"/>
         <TextBox x:Name="messageTextBox" />
         <Button x:Name="sendBtn" Content="Отправить" Click="Button_Click" IsEnabled="False" />
     </StackPanel>

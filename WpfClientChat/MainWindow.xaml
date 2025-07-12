@@ -5,10 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfClientChat"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="300" Loaded="Window_Loaded">
+        Title="MainWindow" Height="450" Width="300" Closing="Window_Closing">
     <StackPanel Margin="4">
-        <Label Content="Введите логин"/>
-        <TextBox x:Name="userTextBox" />
         <Label Content="Введите сообщение"/>
         <TextBox x:Name="messageTextBox" />
         <Button x:Name="sendBtn" Content="Отправить" Click="Button_Click" IsEnabled="False" />

@@ -17,7 +17,7 @@ namespace SignalRAppChat
         public async Task<List<Message>> GetHistory()
         {
             return await context.Messages
-                .OrderByDescending(m => m.SentAt)
+                .OrderByDescending(m => m.Id)
                 .Take(50)
                 .ToListAsync();
         }

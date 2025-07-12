@@ -33,7 +33,8 @@ namespace WpfClientChat
                 Dispatcher.Invoke(() =>
                 {
                     var newMessage = $"{dtNow:HH:mm} {user}: {message}";
-                    chatbox.Items.Insert(0, newMessage);
+                    chatbox.Items.Add(newMessage);
+                    chatbox.ScrollIntoView(newMessage);
                 });
             });
         }
@@ -64,6 +65,11 @@ namespace WpfClientChat
                 foreach (var msg in messages.OrderBy(m => m.SentAt))
                 {
                     chatbox.Items.Add($"{msg.SentAt:HH:mm} {msg.UserName}: {msg.Text}");
+                }
+
+                if (chatbox.Items.Count > 0)
+                {
+                    chatbox.ScrollIntoView(chatbox.Items[chatbox.Items.Count - 1]);
                 }
             }
             catch (Exception ex)

@@ -12,7 +12,7 @@ using SignalRAppChat.Data;
 namespace SignalRAppChat.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250712165438_Initial")]
+    [Migration("20250712170502_Initial")]
     partial class Initial
     {
         /// <inheritdoc />

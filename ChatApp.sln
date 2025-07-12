@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalRAppChat", "SignalRAp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfClientChat", "WpfClientChat\WpfClientChat.csproj", "{BD2105C6-209D-4E7F-B9DE-9C334388DEB8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalRAppChat.Shared", "SignalRAppChat.Shared\SignalRAppChat.Shared.csproj", "{485758E0-AC5E-4B31-825F-BE76D92CC210}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{BD2105C6-209D-4E7F-B9DE-9C334388DEB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD2105C6-209D-4E7F-B9DE-9C334388DEB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD2105C6-209D-4E7F-B9DE-9C334388DEB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{485758E0-AC5E-4B31-825F-BE76D92CC210}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{485758E0-AC5E-4B31-825F-BE76D92CC210}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{485758E0-AC5E-4B31-825F-BE76D92CC210}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{485758E0-AC5E-4B31-825F-BE76D92CC210}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

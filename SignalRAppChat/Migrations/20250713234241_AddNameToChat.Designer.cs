@@ -12,8 +12,8 @@ using SignalRAppChat.Data;
 namespace SignalRAppChat.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250713193011_AddChatSupport")]
-    partial class AddChatSupport
+    [Migration("20250713234241_AddNameToChat")]
+    partial class AddNameToChat
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,6 +35,10 @@ namespace SignalRAppChat.Migrations
 
                     b.Property<bool>("IsGroup")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -70,7 +74,7 @@ namespace SignalRAppChat.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("ChatId")
+                    b.Property<int>("ChatId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("SentAt")
@@ -80,6 +84,9 @@ namespace SignalRAppChat.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
                     b.Property<string>("UserName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -87,6 +94,8 @@ namespace SignalRAppChat.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ChatId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Messages");
                 });
@@ -133,9 +142,21 @@ namespace SignalRAppChat.Migrations
 
             modelBuilder.Entity("SignalRAppChat.Shared.Models.Message", b =>
                 {
-                    b.HasOne("SignalRAppChat.Shared.Models.Chat", null)
+                    b.HasOne("SignalRAppChat.Shared.Models.Chat", "Chat")
                         .WithMany("Messages")
-                        .HasForeignKey("ChatId");
+                        .HasForeignKey("ChatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SignalRAppChat.Shared.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Chat");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SignalRAppChat.Shared.Models.Chat", b =>

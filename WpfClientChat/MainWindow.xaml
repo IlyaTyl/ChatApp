@@ -13,8 +13,8 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Column="0">
-            <TextBox x:Name="searchTextBox" TextChanged="searchTextBox_TextChanged" />
-            <ListBox x:Name="searchResultsListBox" SelectionChanged="searchResultsListBox_SelectionChanged">
+            <TextBox x:Name="searchTextBox" TextChanged="SearchTextBox_TextChanged" />
+            <ListBox x:Name="searchResultsListBox" SelectionChanged="SearchResultsListBox_SelectionChanged">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
@@ -24,7 +24,7 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            <ListBox x:Name="privateChatsListBox" DisplayMemberPath="UserName" SelectionChanged="privateChatsListBox_SelectionChanged"/>
+            <ListBox x:Name="privateChatsListBox" DisplayMemberPath="Name" SelectionChanged="PrivateChatsListBox_SelectionChanged"/>
         </StackPanel>
         <StackPanel Grid.Column="1">
             <ListBox x:Name="chatbox" Height="360" Loaded="chatbox_Loaded" ScrollViewer.ScrollChanged="chatbox_ScrollChanged">

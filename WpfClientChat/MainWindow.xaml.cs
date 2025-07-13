@@ -139,5 +139,27 @@ namespace WpfClientChat
 
             userAtBottom = chatScrollViewer.VerticalOffset >= chatScrollViewer.ScrollableHeight - 1;
         }
+
+
+
+
+        private void searchTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
+
+        private void searchResultsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+        private void АddPrivateChat_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void privateChatsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
     }
 }

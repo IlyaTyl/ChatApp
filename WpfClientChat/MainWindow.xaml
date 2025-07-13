@@ -6,22 +6,42 @@
         xmlns:local="clr-namespace:WpfClientChat"
         xmlns:shared="clr-namespace:SignalRAppChat.Shared.Models;assembly=SignalRAppChat.Shared"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="300" Closing="Window_Closing">
-    <StackPanel Margin="4">
-        <ListBox x:Name="chatbox" Height="360" Loaded="chatbox_Loaded" ScrollViewer.ScrollChanged="chatbox_ScrollChanged">
-            <ListBox.ItemTemplate>
-                <DataTemplate DataType="{x:Type shared:Message}">
-                    <TextBlock>
+        Title="MainWindow" Height="450" Width="400" Closing="Window_Closing" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="150px"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0">
+            <TextBox x:Name="searchTextBox" TextChanged="searchTextBox_TextChanged" />
+            <ListBox x:Name="searchResultsListBox" SelectionChanged="searchResultsListBox_SelectionChanged">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding UserName}" />
+                            <Button Content="+" Click="АddPrivateChat_Click" Tag="{Binding}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <ListBox x:Name="privateChatsListBox" DisplayMemberPath="UserName" SelectionChanged="privateChatsListBox_SelectionChanged"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1">
+            <ListBox x:Name="chatbox" Height="360" Loaded="chatbox_Loaded" ScrollViewer.ScrollChanged="chatbox_ScrollChanged">
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type shared:Message}">
+                        <TextBlock>
                         <Run Text="{Binding SentAt, StringFormat='{}{0:HH:mm}'}"/>
                         <Run Text=" " />
                         <Run Text="{Binding UserName}" FontWeight="Bold" />
                         <Run Text=": " />
                         <Run Text="{Binding Text}" />
-                    </TextBlock>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+                        </TextBlock>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
             <TextBox x:Name="messageTextBox" />
-        <Button x:Name="sendBtn" Content="Отправить" Click="Button_Click" IsEnabled="False" />
-    </StackPanel>
+            <Button x:Name="sendBtn" Content="Отправить" Click="Button_Click" IsEnabled="False" />
+        </StackPanel>
+    </Grid>
 </Window>

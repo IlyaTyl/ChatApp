@@ -18,8 +18,8 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding UserName}" />
-                            <Button Content="+" Click="АddPrivateChat_Click" Tag="{Binding}" />
+                            <TextBlock Text="{Binding UserName}"/>
+                            <Button Content="+" Click="АddPrivateChat_Click" Tag="{Binding}"/>
                         </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

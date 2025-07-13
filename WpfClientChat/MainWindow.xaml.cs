@@ -42,6 +42,14 @@ namespace WpfClientChat
                         chatbox.ScrollIntoView(chatbox.Items[chatbox.Items.Count - 1]);
                 });
             });
+
+            connection.On<List<UserDto>>("ReceiveSearchResults", users =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    searchResultsListBox.ItemsSource = users;
+                });
+            });
         }
 
         public async Task<bool> StartConnectionAsync()
@@ -143,9 +151,25 @@ namespace WpfClientChat
 
 
 
-        private void searchTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private async void searchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
+            try
+            {
+                string query = searchTextBox.Text.Trim();
+                if (!string.IsNullOrEmpty(query))
+                {
+                    await connection.InvokeAsync("SearchUsers", query);
+                }
+                else
+                {
+                    searchResultsListBox.ItemsSource = null;
+                }
 
+            }
+            catch (Exception ex)
+            {
+
+            }
         }
 
         private void searchResultsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

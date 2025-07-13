@@ -36,6 +36,20 @@ namespace SignalRAppChat
             await this.Clients.All.SendAsync("Receive", chatMessage);
         }
 
+        public async Task SearchUsers(string search)
+        {
+            var users = await context.Users
+                .Where(u => u.UserName.StartsWith(search))
+                .Select(u => new UserDto
+                {
+                    Id = u.Id,
+                    UserName = u.UserName
+                })
+                .ToListAsync();
+
+            await Clients.Caller.SendAsync("ReceiveSearchResults", users);
+        }
+
         public async Task<bool> Register(string username, string password)
         {
             if (context.Users.Any(u => u.UserName == username))

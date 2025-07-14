@@ -47,6 +47,10 @@ namespace WpfClientChat
                         if (userAtBottom)
                             chatbox.ScrollIntoView(chatbox.Items[chatbox.Items.Count - 1]);
                     }
+                    else
+                    {
+                        HighlightChat(chatMessage.ChatId);
+                    }
                 });
             });
 
@@ -85,6 +89,17 @@ namespace WpfClientChat
             {
                 MessageBox.Show($"Ошибка подключения: {ex.Message}");
                 return false;
+            }
+        }
+
+        private void HighlightChat(int chatId)
+        {
+            foreach (ChatDto chat in privateChatsListBox.Items)
+            {
+                if(chat.Id == chatId)
+                {
+                    //Будущая реализация UnreadCount
+                }
             }
         }
 

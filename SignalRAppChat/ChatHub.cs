@@ -22,9 +22,44 @@ namespace SignalRAppChat
                 .ToListAsync();
         }
 
+        public async Task<List<ChatDto>> GetUserChats(string userName)
+        {
+            var user = await context.Users
+                .Include(u => u.ChatUsers)
+                .ThenInclude(cu => cu.Chat)
+                .FirstOrDefaultAsync(u => u.UserName == userName);
+
+            if (user == null) return new();
+
+            var chats = user.ChatUsers
+                .Select(cu => cu.Chat)
+                .Distinct()
+                .ToList();
+
+            return chats.Select(c => new ChatDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                IsGroup = c.IsGroup,
+                Users = c.ChatUsers.Select(cu => new UserDto
+                {
+                    Id = cu.User.Id,
+                    UserName = cu.User.UserName
+                }).ToList()
+            }).ToList();
+        }
+
         public async Task JoinChat(int chatId)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, $"chat_{chatId}");
+        }
+
+        public async Task JoinAllChats(List<int> chatIds)
+        {
+            foreach (var chatId in chatIds)
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"chat_{chatId}");
+            }
         }
 
         public async Task SendMessageToChat(int chatId, string senderUsername, string text)

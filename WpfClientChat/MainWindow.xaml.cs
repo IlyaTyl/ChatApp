@@ -65,6 +65,20 @@ namespace WpfClientChat
             {
                 await connection.StartAsync();
                 sendBtn.IsEnabled = true;
+
+                // Получаем список чатов пользователя
+                var chats = await connection.InvokeAsync<List<ChatDto>>("GetUserChats", username);
+
+                // Подключаемся ко всем чат-группам
+                var chatIds = chats.Select(c => c.Id).ToList();
+                await connection.InvokeAsync("JoinAllChats", chatIds);
+
+                // Заполняем список чатов
+                foreach (var chat in chats)
+                {
+                    privateChatsListBox.Items.Add(chat);
+                }
+
                 return true;
             }
             catch (Exception ex)

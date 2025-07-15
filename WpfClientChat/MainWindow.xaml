@@ -6,26 +6,50 @@
         xmlns:local="clr-namespace:WpfClientChat"
         xmlns:shared="clr-namespace:SignalRAppChat.Shared.Models;assembly=SignalRAppChat.Shared"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="400" Closing="Window_Closing" WindowStartupLocation="CenterScreen">
+        Title="MainWindow" Height="450" Width="450" Closing="Window_Closing" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="150px"/>
+            <ColumnDefinition Width="200px"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <StackPanel Grid.Column="0">
-            <TextBox x:Name="searchTextBox" TextChanged="SearchTextBox_TextChanged" />
-            <ListBox x:Name="searchResultsListBox" SelectionChanged="SearchResultsListBox_SelectionChanged">
+
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <TextBox x:Name="searchTextBox" TextChanged="SearchTextBox_TextChanged" Grid.Row="0"/>
+
+            <ListBox x:Name="searchResultsListBox" SelectionChanged="SearchResultsListBox_SelectionChanged" Grid.Row="1">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{Binding UserName}"/>
-                            <Button Content="+" Click="АddPrivateChat_Click" Tag="{Binding}"/>
+                            <Button Content="+Чат" Click="АddPrivateChat_Click" Tag="{Binding}"/>
+                            <Button Content="+Друзья" Click="АddToFriend_Click" Tag="{Binding}"/>
                         </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            <ListBox x:Name="privateChatsListBox" DisplayMemberPath="Name" SelectionChanged="PrivateChatsListBox_SelectionChanged"/>
-        </StackPanel>
+            <TabControl Grid.Column="0" TabStripPlacement="Left" Grid.Row="2">
+                <TabItem Header="Чаты">
+                    <StackPanel>
+                        <ListBox x:Name="privateChatsListBox" DisplayMemberPath="Name" SelectionChanged="PrivateChatsListBox_SelectionChanged"/>
+                    </StackPanel>
+                </TabItem>
+                <TabItem Header="Друзья">
+                    <StackPanel>
+                        <TextBlock Text="Список друзей"/>
+                        <ListBox x:Name="friendsListBox" SelectionChanged="FriendsListBox_SelectionChanged"/>
+                        <TextBlock Text="Запросы в друзья"/>
+                        <ListBox x:Name="requestFriendsListBox" SelectionChanged="RequestFriendsListBox_SelectionChanged"/>
+                    </StackPanel>
+                </TabItem>
+            </TabControl>
+        </Grid>
+
         <StackPanel Grid.Column="1">
             <ListBox x:Name="chatbox" Height="360" Loaded="chatbox_Loaded" ScrollViewer.ScrollChanged="chatbox_ScrollChanged">
                 <ListBox.ItemTemplate>

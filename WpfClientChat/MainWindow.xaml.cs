@@ -191,9 +191,6 @@ namespace WpfClientChat
             userAtBottom = chatScrollViewer.VerticalOffset >= chatScrollViewer.ScrollableHeight - 1;
         }
 
-
-
-
         private async void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             try
@@ -249,12 +246,27 @@ namespace WpfClientChat
             }
         }
 
+        private void АddToFriend_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
         private void PrivateChatsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if(privateChatsListBox.SelectedItem is ChatDto selectedChat)
             {
                 SelectChat(selectedChat);
             }
+        }
+
+        private void FriendsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void RequestFriendsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
         }
     }
 }

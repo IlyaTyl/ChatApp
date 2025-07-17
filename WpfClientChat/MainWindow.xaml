@@ -42,7 +42,15 @@
                 <TabItem Header="Друзья">
                     <StackPanel>
                         <TextBlock Text="Список друзей"/>
-                        <ListBox x:Name="friendsListBox" SelectionChanged="FriendsListBox_SelectionChanged"/>
+                        <ListBox x:Name="friendsListBox" SelectionChanged="FriendsListBox_SelectionChanged">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type shared:UserDto}">
+                                    <TextBlock>
+                                        <Run Text="{Binding UserName}" FontWeight="Bold" />
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                         <TextBlock Text="Запросы в друзья"/>
                         <ListBox x:Name="requestFriendsListBox" SelectionChanged="RequestFriendsListBox_SelectionChanged"/>
                     </StackPanel>

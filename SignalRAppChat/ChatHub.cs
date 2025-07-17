@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using SignalRAppChat.Data;
 using SignalRAppChat.Shared.Models;
 
@@ -14,6 +15,7 @@ namespace SignalRAppChat
             context = appDbContext;
         }
 
+        //Вывод сообщений по чат-id
         public async Task<List<Message>> GetMessagesByChatId(int chatId)
         {
             return await context.Messages
@@ -22,6 +24,7 @@ namespace SignalRAppChat
                 .ToListAsync();
         }
 
+        //Вывод чатов у пользователя
         public async Task<List<ChatDto>> GetUserChats(string userName)
         {
             var user = await context.Users
@@ -49,6 +52,53 @@ namespace SignalRAppChat
             }).ToList();
         }
 
+        //Вывод друзей
+        public async Task<List<UserDto>> GetFriends(string userName)
+        {
+            var user = await context.Users
+                .Include(u => u.Friends)
+                .ThenInclude(f => f.FriendUser)
+                .FirstOrDefaultAsync(u => u.UserName == userName);
+
+            if (user == null) return new();
+
+            return user.Friends
+                .Select(f => new UserDto { Id = f.FriendUser.Id, UserName = f.FriendUser.UserName})
+                .ToList();
+        }
+
+        //Вывод заявок в друзья
+        public async Task<List<UserDto>> GetFriendRequestsReceivers(string userName)
+        {
+            var user = await context.Users
+                .FirstOrDefaultAsync(u => u.UserName == userName);
+
+            if (user == null) return new();
+
+            var requests = await context.Set<FriendRequest>()
+                .Include(fr => fr.Sender)
+                .Where(fr => fr.ReceiverId == user.Id && !fr.IsAccepted)
+                .ToListAsync();
+
+            return requests.Select(fr => new UserDto { Id = fr.Sender.Id, UserName = fr.Sender.UserName }).ToList();
+        }
+
+        public async Task<List<UserDto>> GetFriendRequestsSenders(string userName)
+        {
+            var user = await context.Users
+                .FirstOrDefaultAsync(u => u.UserName == userName);
+
+            if (user == null) return new();
+
+            var requests = await context.Set<FriendRequest>()
+                .Include(fr => fr.Receiver)
+                .Where(fr => fr.SenderId == user.Id && !fr.IsAccepted)
+                .ToListAsync();
+
+            return requests.Select(fr => new UserDto { Id = fr.Receiver.Id, UserName = fr.Receiver.UserName }).ToList();
+        }
+
+        //Присоединение к чату и активным чатам
         public async Task JoinChat(int chatId)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, $"chat_{chatId}");
@@ -62,6 +112,7 @@ namespace SignalRAppChat
             }
         }
 
+        //Отправка сообщения
         public async Task SendMessageToChat(int chatId, string senderUsername, string text)
         {
             var user = await context.Users.FirstOrDefaultAsync(u => u.UserName == senderUsername);
@@ -81,6 +132,70 @@ namespace SignalRAppChat
             await this.Clients.Group($"chat_{chatId}").SendAsync("Receive", chatMessage);
         }
 
+        //Отправка запроса в друзья
+        public async Task SendFriendRequest(string fromUsername, string toUsername)
+        {
+            try
+            {
+                var fromUser = await context.Users.FirstOrDefaultAsync(u => u.UserName == fromUsername);
+                var toUser = await context.Users.FirstOrDefaultAsync(u => u.UserName == toUsername);
+
+                if (fromUser == null || toUser == null || fromUser.Id == toUser.Id)
+                    return;
+
+                bool alreadyRequested = await context.Set<FriendRequest>().AnyAsync(fr =>
+                (fr.SenderId == fromUser.Id && fr.Receiver.Id == toUser.Id) || (fr.SenderId == toUser.Id && fr.Receiver.Id == fromUser.Id));
+
+                if (alreadyRequested)
+                    return;
+
+                var request = new FriendRequest
+                {
+                    Sender = fromUser,
+                    Receiver = toUser
+                };
+
+                context.Add(request);
+                await context.SaveChangesAsync();
+
+                await Clients.User(toUsername).SendAsync("FriendRequestReceived", new UserDto { Id = fromUser.Id, UserName = fromUser.UserName });
+                await Clients.User(fromUsername).SendAsync("FriendRequestSent", new UserDto { Id = toUser.Id, UserName = toUser.UserName });
+            }
+            catch (Exception ex)
+            {
+                throw new HubException("Ошибка при отправке заявки в друзья.");
+            }
+        }
+
+        //Принятие запроса в друзья
+        public async Task AcceptFriendRequest(string currentUserName, string requesterName)
+        {
+            var currentUser = await context.Users.Include(u => u.Friends)
+                .FirstOrDefaultAsync(u => u.UserName == currentUserName);
+            var requester = await context.Users.Include(u => u.Friends)
+                .FirstOrDefaultAsync(u => u.UserName == requesterName);
+
+            if (currentUser == null || requester == null)
+                return;
+
+            var request = await context.Set<FriendRequest>()
+                .FirstOrDefaultAsync(fr => fr.SenderId == requester.Id && fr.ReceiverId == currentUser.Id);
+
+            if (request == null) 
+                return;
+
+            request.IsAccepted = true;
+
+            context.Add(new Friend { UserId = currentUser.Id, FriendUserId = requester.Id });
+            context.Add(new Friend { UserId = requester.Id, FriendUserId = currentUser.Id });
+
+            await context.SaveChangesAsync();
+
+            await Clients.User(currentUserName).SendAsync("FriendRequestAccepted", new UserDto { Id = requester.Id, UserName = requester.UserName });
+            await Clients.User(requesterName).SendAsync("FriendRequestAccepted", new UserDto { Id = currentUser.Id, UserName = currentUser.UserName });
+        }
+
+        //Поиск пользователя
         public async Task SearchUsers(string search)
         {
             var users = await context.Users
@@ -95,6 +210,7 @@ namespace SignalRAppChat
             await Clients.Caller.SendAsync("ReceiveSearchResults", users);
         }
 
+        //Создание приватного чата
         public async Task<ChatDto?> CreatePrivateChat(string currentUserName, string targetUserName)
         {
             var user1 = await context.Users.FirstOrDefaultAsync(u => u.UserName == currentUserName);
@@ -103,8 +219,6 @@ namespace SignalRAppChat
             if (user1 == null || user2 == null || user1.Id == user2.Id)
                 return null;
 
-
-            //
             var existingChat = await context.Chats
                 .Include(c => c.ChatUsers).ThenInclude(cu => cu.User)
                 .Where(c => !c.IsGroup &&
@@ -149,7 +263,7 @@ namespace SignalRAppChat
             };
         }
 
-
+        //Аунтификация
         public async Task<bool> Register(string username, string password)
         {
             if (context.Users.Any(u => u.UserName == username))

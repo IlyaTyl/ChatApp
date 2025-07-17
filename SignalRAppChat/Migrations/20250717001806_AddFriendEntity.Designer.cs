@@ -12,8 +12,8 @@ using SignalRAppChat.Data;
 namespace SignalRAppChat.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250713234241_AddNameToChat")]
-    partial class AddNameToChat
+    [Migration("20250717001806_AddFriendEntity")]
+    partial class AddFriendEntity
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -64,6 +64,55 @@ namespace SignalRAppChat.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ChatUsers");
+                });
+
+            modelBuilder.Entity("SignalRAppChat.Shared.Models.Friend", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("FriendUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FriendUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Friend");
+                });
+
+            modelBuilder.Entity("SignalRAppChat.Shared.Models.FriendRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsAccepted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ReceiverId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SenderId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("FriendRequests");
                 });
 
             modelBuilder.Entity("SignalRAppChat.Shared.Models.Message", b =>
@@ -140,6 +189,44 @@ namespace SignalRAppChat.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SignalRAppChat.Shared.Models.Friend", b =>
+                {
+                    b.HasOne("SignalRAppChat.Shared.Models.User", "FriendUser")
+                        .WithMany("FriendOf")
+                        .HasForeignKey("FriendUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SignalRAppChat.Shared.Models.User", "User")
+                        .WithMany("Friends")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FriendUser");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SignalRAppChat.Shared.Models.FriendRequest", b =>
+                {
+                    b.HasOne("SignalRAppChat.Shared.Models.User", "Receiver")
+                        .WithMany("ReceivedFriendRequests")
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SignalRAppChat.Shared.Models.User", "Sender")
+                        .WithMany("SentFriendRequests")
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
+                });
+
             modelBuilder.Entity("SignalRAppChat.Shared.Models.Message", b =>
                 {
                     b.HasOne("SignalRAppChat.Shared.Models.Chat", "Chat")
@@ -169,6 +256,14 @@ namespace SignalRAppChat.Migrations
             modelBuilder.Entity("SignalRAppChat.Shared.Models.User", b =>
                 {
                     b.Navigation("ChatUsers");
+
+                    b.Navigation("FriendOf");
+
+                    b.Navigation("Friends");
+
+                    b.Navigation("ReceivedFriendRequests");
+
+                    b.Navigation("SentFriendRequests");
                 });
 #pragma warning restore 612, 618
         }

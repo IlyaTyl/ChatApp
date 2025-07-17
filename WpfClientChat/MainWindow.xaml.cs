@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using SignalRAppChat.Shared.Models;
+using System.Security.RightsManagement;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -32,7 +33,7 @@ namespace WpfClientChat
             username = userName;
 
             connection = new HubConnectionBuilder()
-                .WithUrl("https://localhost:7226/chat")
+                .WithUrl($"https://localhost:7226/chat?username={username}")
                 .WithAutomaticReconnect()
                 .Build();
 
@@ -61,6 +62,31 @@ namespace WpfClientChat
                     searchResultsListBox.ItemsSource = users;
                 });
             });
+
+            connection.On<UserDto>("FriendRequestReceived", user => 
+            {
+                Dispatcher.Invoke(() => 
+                {
+                    AddRequestToList(user, isIncoming: true);
+                });
+            });
+
+            connection.On<UserDto>("FriendRequestSent", user =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    AddRequestToList(user, isIncoming: false);
+                });
+            });
+
+            connection.On<UserDto>("FriendRequestAccepted", user =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    friendsListBox.Items.Add(user);
+                    RemoveFromRequestList(user);
+                });
+            });
         }
 
         public async Task<bool> StartConnectionAsync()
@@ -70,17 +96,33 @@ namespace WpfClientChat
                 await connection.StartAsync();
                 sendBtn.IsEnabled = true;
 
-                // Получаем список чатов пользователя
+                // Подключаемся ко всем чат-группам и выводим их
                 var chats = await connection.InvokeAsync<List<ChatDto>>("GetUserChats", username);
-
-                // Подключаемся ко всем чат-группам
                 var chatIds = chats.Select(c => c.Id).ToList();
                 await connection.InvokeAsync("JoinAllChats", chatIds);
 
-                // Заполняем список чатов
                 foreach (var chat in chats)
                 {
                     privateChatsListBox.Items.Add(chat);
+                }
+
+                //Вывод заявок в друзья
+                var requestsReceiver = await connection.InvokeAsync<List<UserDto>>("GetFriendRequestsReceivers", username);
+                foreach (var user in requestsReceiver)
+                {
+                    AddRequestToList(user, isIncoming: true);
+                }
+                var requestsSenders = await connection.InvokeAsync<List<UserDto>>("GetFriendRequestsSenders", username);
+                foreach (var user in requestsSenders)
+                {
+                    AddRequestToList(user, isIncoming: false);
+                }
+
+                //Вывод всех друзей
+                var friends = await connection.InvokeAsync<List<UserDto>>("GetFriends", username);
+                foreach (var user in friends)
+                {
+                    friendsListBox.Items.Add(user);
                 }
 
                 return true;
@@ -89,6 +131,54 @@ namespace WpfClientChat
             {
                 MessageBox.Show($"Ошибка подключения: {ex.Message}");
                 return false;
+            }
+        }
+
+        private void AddRequestToList(UserDto user, bool isIncoming)
+        {
+            var panel = new StackPanel { Orientation = Orientation.Horizontal };
+            panel.Children.Add(new TextBlock { Text = user.UserName });
+
+            if (isIncoming)
+            {
+                var acceptBtn = new Button { Content = "Принять", Tag = user };
+                acceptBtn.Click += AcceptFriend_Click;
+                panel.Children.Add(acceptBtn);
+            }
+
+            var cancelBtn = new Button { Content = "Отмена", Tag = user };
+            cancelBtn.Click += CancelRequest_Click;
+            panel.Children.Add(cancelBtn);
+
+            requestFriendsListBox.Items.Add(panel);
+        }
+
+        private void RemoveFromRequestList(UserDto user)
+        {
+            var itemsToRemove = requestFriendsListBox.Items.Cast<StackPanel>()
+                .Where(p => (p.Children[0] as TextBlock)?.Text == user.UserName)
+                .ToList();
+
+            foreach (var item in itemsToRemove)
+            {
+                requestFriendsListBox.Items.Remove(item);
+            }
+        }
+
+        private async void CancelRequest_Click(object sender, RoutedEventArgs e)
+        {
+            if(sender is Button btn && btn.Tag is UserDto user)
+            {
+                //Будущая реализация удаления заявки
+                await connection.InvokeAsync("CancelFriendRequest");
+            }
+        }
+
+        private async void AcceptFriend_Click(object sender, RoutedEventArgs e)
+        {
+            if(sender is Button btn && btn.Tag is UserDto user)
+            {
+                await connection.InvokeAsync("AcceptFriendRequest", username, user.UserName);
             }
         }
 
@@ -246,9 +336,19 @@ namespace WpfClientChat
             }
         }
 
-        private void АddToFriend_Click(object sender, RoutedEventArgs e)
+        private async void АddToFriend_Click(object sender, RoutedEventArgs e)
         {
-
+            if (sender is Button btn && btn.Tag is UserDto targetUser)
+            {
+                try
+                {
+                    await connection.InvokeAsync("SendFriendRequest", username, targetUser.UserName);
+                }
+                catch(Exception ex)
+                {
+                    MessageBox.Show($"Ошибка при отправке запроса: {ex.Message}");
+                }
+            }
         }
 
         private void PrivateChatsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

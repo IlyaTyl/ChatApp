@@ -1,9 +1,15 @@
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using SignalRAppChat;
 using SignalRAppChat.Data;
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+//
+builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+//
+
 builder.Services.AddSignalR();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

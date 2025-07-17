@@ -73,7 +73,7 @@
                 </ListBox.ItemTemplate>
             </ListBox>
             <TextBox x:Name="messageTextBox" />
-            <Button x:Name="sendBtn" Content="Отправить" Click="Button_Click" IsEnabled="False" />
+            <Button x:Name="sendBtn" Content="Отправить" Click="SendMessageToChat_Click" IsEnabled="False" />
         </StackPanel>
     </Grid>
 </Window>

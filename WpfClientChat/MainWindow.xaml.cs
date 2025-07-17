@@ -134,6 +134,8 @@ namespace WpfClientChat
             }
         }
 
+
+        //Добавление и удаление заявок в друзья
         private void AddRequestToList(UserDto user, bool isIncoming)
         {
             var panel = new StackPanel { Orientation = Orientation.Horizontal };
@@ -165,6 +167,7 @@ namespace WpfClientChat
             }
         }
 
+        //Отмена и принятие заявок в друзья
         private async void CancelRequest_Click(object sender, RoutedEventArgs e)
         {
             if(sender is Button btn && btn.Tag is UserDto user)
@@ -182,6 +185,7 @@ namespace WpfClientChat
             }
         }
 
+        //Счетчик новых сообщений в чате
         private void HighlightChat(int chatId)
         {
             foreach (ChatDto chat in privateChatsListBox.Items)
@@ -193,6 +197,7 @@ namespace WpfClientChat
             }
         }
 
+        //Выводит на каком сообщении находится ScrollViewer
         private ScrollViewer GetScrollViewer(DependencyObject depObj)
         {
             if(depObj is ScrollViewer) return (ScrollViewer)depObj;
@@ -206,6 +211,7 @@ namespace WpfClientChat
             return null!;
         }
 
+        //Загрузка сообщений выбранного чата
         private async void SelectChat(ChatDto chat)
         {
             try
@@ -233,7 +239,8 @@ namespace WpfClientChat
             }
         }
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        //Отправка сообщения в чат
+        private async void SendMessageToChat_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -250,6 +257,7 @@ namespace WpfClientChat
             }
         }
 
+        //Закрытие окна
         private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             try
@@ -269,11 +277,13 @@ namespace WpfClientChat
             }
         }
 
+        //Обработчик загрузки chatbox
         private void chatbox_Loaded(object sender, RoutedEventArgs e)
         {
             chatScrollViewer = GetScrollViewer(chatbox);
         }
 
+        //Обработчик смены расположения Scroll в chatbox
         private void chatbox_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             if (chatScrollViewer == null) return;
@@ -281,6 +291,7 @@ namespace WpfClientChat
             userAtBottom = chatScrollViewer.VerticalOffset >= chatScrollViewer.ScrollableHeight - 1;
         }
 
+        //Обработчик изменения текста в строке поиска
         private async void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             try
@@ -302,11 +313,7 @@ namespace WpfClientChat
             }
         }
 
-        private void SearchResultsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
+        //Обработчик нажатия кнопки добавления приватного чата
         private async void АddPrivateChat_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.Tag is UserDto targetUser)
@@ -336,6 +343,7 @@ namespace WpfClientChat
             }
         }
 
+        //Обработчик нажатия кнопки добавления в друзья
         private async void АddToFriend_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.Tag is UserDto targetUser)
@@ -351,12 +359,18 @@ namespace WpfClientChat
             }
         }
 
+        //Обработчик выбора приватного чата
         private void PrivateChatsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if(privateChatsListBox.SelectedItem is ChatDto selectedChat)
             {
                 SelectChat(selectedChat);
             }
+        }
+
+        private void SearchResultsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
         }
 
         private void FriendsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

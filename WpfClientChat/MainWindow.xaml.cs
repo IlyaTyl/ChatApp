@@ -87,6 +87,14 @@ namespace WpfClientChat
                     RemoveFromRequestList(user);
                 });
             });
+
+            connection.On<UserDto>("FriendRequestCancelled", user =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    RemoveFromRequestList(user);
+                });
+            });
         }
 
         public async Task<bool> StartConnectionAsync()
@@ -172,8 +180,7 @@ namespace WpfClientChat
         {
             if(sender is Button btn && btn.Tag is UserDto user)
             {
-                //Будущая реализация удаления заявки
-                await connection.InvokeAsync("CancelFriendRequest");
+                await connection.InvokeAsync("CancelFriendRequest", username, user.UserName);
             }
         }
 

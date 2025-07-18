@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using SignalRAppChat.Data;
@@ -193,6 +194,36 @@ namespace SignalRAppChat
 
             await Clients.User(currentUserName).SendAsync("FriendRequestAccepted", new UserDto { Id = requester.Id, UserName = requester.UserName });
             await Clients.User(requesterName).SendAsync("FriendRequestAccepted", new UserDto { Id = currentUser.Id, UserName = currentUser.UserName });
+        }
+
+        public async Task CancelFriendRequest(string currentUserName, string requesterOrReceiverName)
+        {
+            var currentUser = await context.Users.Include(u => u.Friends)
+                .FirstOrDefaultAsync(u => u.UserName == currentUserName);
+            var requesterOrReceiver = await context.Users.Include(u => u.Friends)
+                .FirstOrDefaultAsync(u => u.UserName == requesterOrReceiverName);
+
+            if (currentUser == null || requesterOrReceiver == null)
+                return;
+
+            var request = await context.Set<FriendRequest>()
+                .FirstOrDefaultAsync(fr => fr.SenderId == requesterOrReceiver.Id && fr.ReceiverId == currentUser.Id && fr.IsAccepted == false);
+
+            if (request == null) 
+            {
+                request = await context.Set<FriendRequest>()
+                .FirstOrDefaultAsync(fr => fr.SenderId == currentUser.Id && fr.ReceiverId == requesterOrReceiver.Id && fr.IsAccepted == false);
+
+                if (request == null)
+                    return;
+            }
+
+            context.Set<FriendRequest>().Remove(request);
+
+            await context.SaveChangesAsync();
+
+            await Clients.User(currentUserName).SendAsync("FriendRequestCancelled", new UserDto { Id = requesterOrReceiver.Id, UserName = requesterOrReceiver.UserName });
+            await Clients.User(requesterOrReceiverName).SendAsync("FriendRequestCancelled", new UserDto { Id = currentUser.Id, UserName = currentUser.UserName });
         }
 
         //Поиск пользователя

@@ -282,7 +282,7 @@ namespace SignalRAppChat
             context.Chats.Add(newChat);
             await context.SaveChangesAsync();
 
-            return new ChatDto
+            var chatDto = new ChatDto
             {
                 Id = newChat.Id,
                 Name = newChat.Name,
@@ -293,6 +293,9 @@ namespace SignalRAppChat
                     new UserDto { Id = user2.Id, UserName = user2.UserName }
                 }
             };
+
+            await Clients.Users(targetUserName).SendAsync("ReceiveNewPrivateChat", chatDto);
+            return chatDto;
         }
 
         //Создание группового чата
@@ -343,7 +346,7 @@ namespace SignalRAppChat
             context.Chats.Add(groupChat);
             await context.SaveChangesAsync();
 
-            return new ChatDto
+            var chatDto = new ChatDto
             {
                 Id = groupChat.Id,
                 Name = groupChat.Name,
@@ -355,6 +358,11 @@ namespace SignalRAppChat
                         UserName = cu.User.UserName
                     }).ToList()
             };
+
+            var allParticipants = usersToAdd.Select(u => u.UserName).ToList();
+
+            await Clients.Users(allParticipants).SendAsync("ReceiveNewGroupChat", chatDto);
+            return chatDto;
         }
 
         //Аунтификация

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using SignalRAppChat.Shared.Models;
+using System;
 using System.Security.RightsManagement;
 using System.Text;
 using System.Threading.Tasks;
@@ -52,6 +53,22 @@ namespace WpfClientChat
                     {
                         HighlightChat(chatMessage.ChatId);
                     }
+                });
+            });
+
+            connection.On<ChatDto>("ReceiveNewGroupChat", async chat =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    groupChatsListBox.Items.Add(chat);
+                });
+            });
+
+            connection.On<ChatDto>("ReceiveNewPrivateChat", async chat =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    privateChatsListBox.Items.Add(chat);
                 });
             });
 
@@ -111,7 +128,14 @@ namespace WpfClientChat
 
                 foreach (var chat in chats)
                 {
-                    privateChatsListBox.Items.Add(chat);
+                    if (chat.IsGroup)
+                    {
+                        groupChatsListBox.Items.Add(chat);
+                    }
+                    else
+                    {
+                        privateChatsListBox.Items.Add(chat);
+                    }
                 }
 
                 //Вывод заявок в друзья
@@ -349,6 +373,26 @@ namespace WpfClientChat
                 } 
             }
         }
+        //Обработчик нажатия кнопки добавления группового чата
+        private async void AddGroupChat_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> friendUserNames = new List<string>();
+            var friendUsers = await connection.InvokeAsync<List<UserDto>>("GetFriends", username);
+
+            foreach (var user in friendUsers)
+            {
+                friendUserNames.Add(user.UserName);
+            }
+
+            var createGroupChatWindow = new CreateGroupChatWindow(username, friendUserNames, connection);
+            bool? result = createGroupChatWindow.ShowDialog();
+
+            if (result == true && createGroupChatWindow.CreatedChat != null)
+            {
+                groupChatsListBox.Items.Add(createGroupChatWindow.CreatedChat);
+                SelectChat(createGroupChatWindow.CreatedChat);
+            }
+        }
 
         //Обработчик нажатия кнопки добавления в друзья
         private async void АddToFriend_Click(object sender, RoutedEventArgs e)
@@ -371,6 +415,7 @@ namespace WpfClientChat
         {
             if(privateChatsListBox.SelectedItem is ChatDto selectedChat)
             {
+                groupChatsListBox.SelectedItem = null;
                 SelectChat(selectedChat);
             }
         }
@@ -380,6 +425,7 @@ namespace WpfClientChat
         {
             if(groupChatsListBox.SelectedItem is ChatDto selectedChat)
             {
+                privateChatsListBox.SelectedItem = null;
                 SelectChat(selectedChat);
             }
         }
@@ -398,5 +444,6 @@ namespace WpfClientChat
         {
 
         }
+
     }
 }

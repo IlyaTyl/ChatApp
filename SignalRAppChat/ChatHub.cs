@@ -162,7 +162,7 @@ namespace SignalRAppChat
                 await Clients.User(toUsername).SendAsync("FriendRequestReceived", new UserDto { Id = fromUser.Id, UserName = fromUser.UserName });
                 await Clients.User(fromUsername).SendAsync("FriendRequestSent", new UserDto { Id = toUser.Id, UserName = toUser.UserName });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw new HubException("Ошибка при отправке заявки в друзья.");
             }
@@ -196,6 +196,7 @@ namespace SignalRAppChat
             await Clients.User(requesterName).SendAsync("FriendRequestAccepted", new UserDto { Id = currentUser.Id, UserName = currentUser.UserName });
         }
 
+        //Отмена заявки в друзья
         public async Task CancelFriendRequest(string currentUserName, string requesterOrReceiverName)
         {
             var currentUser = await context.Users.Include(u => u.Friends)
@@ -291,6 +292,68 @@ namespace SignalRAppChat
                     new UserDto { Id = user1.Id, UserName = user1.UserName },
                     new UserDto { Id = user2.Id, UserName = user2.UserName }
                 }
+            };
+        }
+
+        //Создание группового чата
+        public async Task<ChatDto?> CreateGroupChat(string creatorUserName, string groupName, List<string> participantUserNames)
+        {
+            var creator = await context.Users
+                .Include(u => u.Friends)
+                .Include(u => u.FriendOf)
+                .FirstOrDefaultAsync(u => u.UserName == creatorUserName);
+
+            if (creator == null)
+                return null;
+
+            var friendIds = creator.Friends.Select(f => f.FriendUserId)
+                .Union(creator.FriendOf.Select(f => f.UserId))
+                .ToHashSet();
+
+            var usersToAdd = await context.Users
+                .Where(u => participantUserNames.Contains(u.UserName))
+                .ToListAsync();
+
+            if(usersToAdd.Any(u => !friendIds.Contains(u.Id)))
+            {
+                return null;
+            }
+
+            var groupChat = new Chat
+            {
+                Name = groupName,
+                IsGroup = true
+            };
+
+            groupChat.ChatUsers.Add(new ChatUser
+            {
+                UserId = creator.Id,
+                IsAdmin = true
+            });
+
+            foreach (var user in usersToAdd)
+            {
+                groupChat.ChatUsers.Add(new ChatUser
+                {
+                    UserId = user.Id,
+                    IsAdmin = false
+                });
+            }
+
+            context.Chats.Add(groupChat);
+            await context.SaveChangesAsync();
+
+            return new ChatDto
+            {
+                Id = groupChat.Id,
+                Name = groupChat.Name,
+                IsGroup = groupChat.IsGroup,
+                Users = groupChat.ChatUsers
+                    .Select(cu => new UserDto
+                    {
+                        Id = cu.User.Id,
+                        UserName = cu.User.UserName
+                    }).ToList()
             };
         }
 

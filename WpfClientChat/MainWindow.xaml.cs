@@ -375,6 +375,15 @@ namespace WpfClientChat
             }
         }
 
+        //Обработчик выбора группового чата
+        private void GroupChatsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if(groupChatsListBox.SelectedItem is ChatDto selectedChat)
+            {
+                SelectChat(selectedChat);
+            }
+        }
+
         private void SearchResultsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
 

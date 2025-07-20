@@ -36,7 +36,10 @@
             <TabControl Grid.Column="0" TabStripPlacement="Left" Grid.Row="2">
                 <TabItem Header="Чаты">
                     <StackPanel>
+                        <TextBlock Text="Личные чаты"/>
                         <ListBox x:Name="privateChatsListBox" DisplayMemberPath="Name" SelectionChanged="PrivateChatsListBox_SelectionChanged"/>
+                        <TextBlock Text="Групповые чаты"/>
+                        <ListBox x:Name="groupChatsListBox" DisplayMemberPath="Name" SelectionChanged="GroupChatsListBox_SelectionChanged"/>
                     </StackPanel>
                 </TabItem>
                 <TabItem Header="Друзья">

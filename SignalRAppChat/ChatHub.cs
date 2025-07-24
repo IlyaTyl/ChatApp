@@ -383,7 +383,12 @@ namespace SignalRAppChat
         //Удаление истории чата
         public async Task ClearChatHistory(int chatId)
         {
-            var chat = await context.Chats.Include(c => c.Messages).FirstOrDefaultAsync(c => c.Id == chatId);
+            var chat = await context.Chats
+                .Include(c => c.Messages)
+                .Include(c => c.ChatUsers)
+                .ThenInclude(cu => cu.User)
+                .FirstOrDefaultAsync(c => c.Id == chatId);
+
             if(chat != null)
             {
                 context.Messages.RemoveRange(chat.Messages);

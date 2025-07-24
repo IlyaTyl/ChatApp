@@ -61,23 +61,6 @@
                 </TabItem>
             </TabControl>
         </Grid>
-
-        <StackPanel Grid.Column="1">
-            <ListBox x:Name="chatbox" Height="360" Loaded="chatbox_Loaded" ScrollViewer.ScrollChanged="chatbox_ScrollChanged">
-                <ListBox.ItemTemplate>
-                    <DataTemplate DataType="{x:Type shared:Message}">
-                        <TextBlock>
-                        <Run Text="{Binding SentAt, StringFormat='{}{0:HH:mm}'}"/>
-                        <Run Text=" " />
-                        <Run Text="{Binding UserName}" FontWeight="Bold" />
-                        <Run Text=": " />
-                        <Run Text="{Binding Text}" />
-                        </TextBlock>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-            <TextBox x:Name="messageTextBox" />
-            <Button x:Name="sendBtn" Content="Отправить" Click="SendMessageToChat_Click" IsEnabled="False" />
-        </StackPanel>
+        <ContentControl x:Name="ChatContentControl" Grid.Column="1"/>
     </Grid>
 </Window>

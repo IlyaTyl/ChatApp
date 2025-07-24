@@ -16,6 +16,21 @@ namespace SignalRAppChat
             context = appDbContext;
         }
 
+        //Является ли пользователь админом чата
+        public async Task<bool> IsUserAdmin(int chatId, string userName)
+        {
+            var user = await context.Users.FirstOrDefaultAsync(u => u.UserName == userName);
+            if (user == null)
+            {
+                return false;
+            }
+
+            var chatUser = await context.Set<ChatUser>()
+                .FirstOrDefaultAsync(cu => cu.ChatId == chatId && cu.UserId == user.Id);
+
+            return chatUser?.IsAdmin ?? false;
+        }
+
         //Вывод сообщений по чат-id
         public async Task<List<Message>> GetMessagesByChatId(int chatId)
         {
@@ -365,6 +380,42 @@ namespace SignalRAppChat
             return chatDto;
         }
 
+        //Удаление истории чата
+        public async Task ClearChatHistory(int chatId)
+        {
+            var chat = await context.Chats.Include(c => c.Messages).FirstOrDefaultAsync(c => c.Id == chatId);
+            if(chat != null)
+            {
+                context.Messages.RemoveRange(chat.Messages);
+                await context.SaveChangesAsync();
+
+                var userIds = chat.ChatUsers.Select(cu => cu.User.UserName).ToList();
+                await Clients.Users(userIds).SendAsync("ChatHistoryCleared", chatId);
+            }
+        }
+
+        //Удаление чата
+        public async Task DeleteChat(int chatId)
+        {
+            var chat = await context.Chats
+                    .Include(c => c.Messages)
+                    .Include(c => c.ChatUsers)
+                    .ThenInclude(cu => cu.User)
+                    .FirstOrDefaultAsync(c => c.Id == chatId);
+
+            if (chat != null)
+            {
+                var otherUsers = chat.ChatUsers.Select(cu => cu.User.UserName).ToList();
+
+                context.Messages.RemoveRange(chat.Messages);
+                context.ChatUsers.RemoveRange(chat.ChatUsers);
+                context.Chats.Remove(chat);
+
+                await context.SaveChangesAsync();
+
+                await Clients.Users(otherUsers).SendAsync("ChatHasBeenDeleted", chatId);
+            }
+        }
         //Аунтификация
         public async Task<bool> Register(string username, string password)
         {

@@ -12,17 +12,206 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Microsoft.AspNetCore.SignalR.Client;
+using SignalRAppChat.Shared.Models;
 
 namespace WpfClientChat
 {
-    /// <summary>
-    /// Логика взаимодействия для ChatView.xaml
-    /// </summary>
     public partial class ChatView : UserControl
     {
-        public ChatView()
+        HubConnection connection;
+        DateTime dtNow = DateTime.UtcNow;
+        private readonly string username;
+
+        private ScrollViewer? chatScrollViewer;
+        private bool userAtBottom = true;
+
+        private ChatDto currentChat;
+        private bool isAdmin = false;
+        public ChatView(HubConnection connection, ChatDto chat, string username)
         {
+            this.connection = connection;
+            this.username = username;
+            currentChat = chat;
             InitializeComponent();
+
+            connection.On<Message>("Receive", (chatMessage) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    if (chatMessage.ChatId == currentChat.Id)
+                    {
+                        chatbox.Items.Add(chatMessage);
+
+                        if (userAtBottom)
+                            chatbox.ScrollIntoView(chatbox.Items[chatbox.Items.Count - 1]);
+                    }
+                });
+            });
+
+            connection.On<int>("ChatHistoryCleared", (chatId) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    if (currentChat != null && currentChat.Id == chatId)
+                    {
+                        chatbox.Items.Clear();
+                    }
+                });
+            });
+        }
+
+        //Загрузка ChatView
+        private async void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                chatbox.Items.Clear();
+                chatTitle.Text = currentChat.Name;
+
+                // Загружаем историю по ChatId
+                await connection.InvokeAsync("JoinChat", currentChat.Id);
+                var messages = await connection.InvokeAsync<List<Message>>("GetMessagesByChatId", currentChat.Id);
+
+                foreach (var msg in messages.OrderBy(m => m.SentAt))
+                {
+                    chatbox.Items.Add(msg);
+                }
+
+                if (chatbox.Items.Count > 0)
+                {
+                    chatbox.ScrollIntoView(chatbox.Items[chatbox.Items.Count - 1]);
+                }
+
+                if(currentChat.IsGroup)
+                {
+                    isAdmin = await connection.InvokeAsync<bool>("IsUserAdmin", currentChat.Id, username);
+                }
+                else
+                {
+                    isAdmin = true;
+                }
+
+                deleteChatMenuItem.Visibility = isAdmin || !currentChat.IsGroup ? Visibility.Visible : Visibility.Collapsed;
+                clearChatHistoryMenuItem.Visibility = isAdmin || !currentChat.IsGroup ? Visibility.Visible : Visibility.Collapsed;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка загрузки сообщений: {ex.Message}");
+            }
+        }
+
+        //Выводит на каком сообщении находится ScrollViewer
+        private ScrollViewer GetScrollViewer(DependencyObject depObj)
+        {
+            if (depObj is ScrollViewer) return (ScrollViewer)depObj;
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+            {
+                var child = VisualTreeHelper.GetChild(depObj, i);
+                var result = GetScrollViewer(child);
+                if (result != null) return result;
+            }
+            return null!;
+        }
+
+        //Обработчик загрузки chatbox
+        private void chatbox_Loaded(object sender, RoutedEventArgs e)
+        {
+            chatScrollViewer = GetScrollViewer(chatbox);
+        }
+
+        //Обработчик смены расположения Scroll в chatbox
+        private void chatbox_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (chatScrollViewer == null) return;
+
+            userAtBottom = chatScrollViewer.VerticalOffset >= chatScrollViewer.ScrollableHeight - 1;
+        }
+
+        //Отправка сообщения в чат
+        private async void SendMessageToChat_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var text = messageTextBox.Text.Trim();
+                if (!string.IsNullOrEmpty(text) && currentChat != null)
+                {
+                    await connection.InvokeAsync("SendMessageToChat", currentChat.Id, username, text);
+                    messageTextBox.Clear();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка отправки: {ex.Message}");
+            }
+        }
+
+        private void OptionsButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button? btn = sender as Button;
+            if (btn?.ContextMenu != null)
+            {
+                btn.ContextMenu.PlacementTarget = btn;
+                btn.ContextMenu.IsOpen = true;
+            }
+        }
+
+        private async void DeleteChat_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var result = MessageBox.Show("Вы уверены, что хотите удалить чат?",
+                    "Подтверждение удаления",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+                        await connection.InvokeAsync("DeleteChat", currentChat.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Ошибка при удалении чата: {ex.Message}");
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show($"Ошибка удаления чата: {ex.Message}");
+            }
+        }
+
+        private async void ClearChatHistory_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var result = MessageBox.Show("Вы уверены, что хотите удалить всю историю сообщений этого чата?",
+                    "Очистка истории чата",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+                        await connection.InvokeAsync("ClearChatHistory", currentChat.Id);
+                        chatbox.Items.Clear();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Ошибка при удалении истории: {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка {ex.Message}");
+            }
         }
     }
+
+
 }

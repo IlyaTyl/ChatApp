@@ -5,22 +5,41 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:WpfClientChat"
              xmlns:shared="clr-namespace:SignalRAppChat.Shared.Models;assembly=SignalRAppChat.Shared"
-             Height="Auto" Width="Auto">
-    <StackPanel>
-        <ListBox x:Name="chatbox" Height="360" Width="250">
-            <ListBox.ItemTemplate>
-                <DataTemplate DataType="{x:Type shared:Message}">
-                    <TextBlock>
+             Height="Auto" Width="Auto" Loaded="UserControl_Loaded">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Row="0" LastChildFill="False" Background="White">
+            <TextBlock x:Name="chatTitle" Text="Название" FontWeight="Bold" VerticalAlignment="Center" DockPanel.Dock="Left"/>
+            <Button x:Name="optionsButton" Content="⋮" DockPanel.Dock="Right" Click="OptionsButton_Click" Width="8">
+                <Button.ContextMenu>
+                    <ContextMenu Placement="Left">
+                        <MenuItem x:Name="deleteChatMenuItem" Header="Удалить чат" Click="DeleteChat_Click"/>
+                        <MenuItem x:Name="clearChatHistoryMenuItem" Header="Очистить историю" Click="ClearChatHistory_Click"/>
+                    </ContextMenu>
+                </Button.ContextMenu>
+            </Button>
+        </DockPanel>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ListBox x:Name="chatbox" Height="360" Width="250" Loaded="chatbox_Loaded" ScrollViewer.ScrollChanged="chatbox_ScrollChanged">
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type shared:Message}">
+                        <TextBlock>
                         <Run Text="{Binding SentAt, StringFormat='{}{0:HH:mm}'}"/>
                         <Run Text=" " />
                         <Run Text="{Binding UserName}" FontWeight="Bold" />
                         <Run Text=": " />
                         <Run Text="{Binding Text}" />
-                    </TextBlock>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <TextBox x:Name="messageTextBox"/>
-        <Button x:Name="sendBtn" Content="Отправить"/>
-    </StackPanel>
+                        </TextBlock>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </ScrollViewer>
+        <TextBox x:Name="messageTextBox" Grid.Row="2"/>
+        <Button x:Name="sendBtn" Content="Отправить" Click="SendMessageToChat_Click" Grid.Row="3"/>
+    </Grid>
 </UserControl>

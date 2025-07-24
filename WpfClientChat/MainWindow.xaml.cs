@@ -42,14 +42,7 @@ namespace WpfClientChat
             {
                 Dispatcher.Invoke(() =>
                 {
-                    if (currentChat != null && chatMessage.ChatId == currentChat.Id)
-                    {
-                        chatbox.Items.Add(chatMessage);
-
-                        if (userAtBottom)
-                            chatbox.ScrollIntoView(chatbox.Items[chatbox.Items.Count - 1]);
-                    }
-                    else
+                    if (currentChat == null || chatMessage.ChatId != currentChat.Id)
                     {
                         HighlightChat(chatMessage.ChatId);
                     }
@@ -67,7 +60,7 @@ namespace WpfClientChat
             connection.On<ChatDto>("ReceiveNewPrivateChat", async chat =>
             {
                 Dispatcher.Invoke(() =>
-                {
+                {   
                     privateChatsListBox.Items.Add(chat);
                 });
             });
@@ -112,6 +105,26 @@ namespace WpfClientChat
                     RemoveFromRequestList(user);
                 });
             });
+
+            connection.On<int>("ChatHasBeenDeleted", (deletedChatId) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    var privateChat = privateChatsListBox.Items
+                        .OfType<ChatDto>()
+                        .FirstOrDefault(c => c.Id == deletedChatId);
+                    if (privateChat != null)
+                        privateChatsListBox.Items.Remove(privateChat);
+
+                    var groupChat = groupChatsListBox.Items
+                        .OfType<ChatDto>()
+                        .FirstOrDefault(c => c.Id == deletedChatId);
+                    if (groupChat != null)
+                        groupChatsListBox.Items.Remove(groupChat);
+
+                    ChatContentControl.Content = null;
+                });
+            });
         }
 
         public async Task<bool> StartConnectionAsync()
@@ -119,7 +132,6 @@ namespace WpfClientChat
             try
             {
                 await connection.StartAsync();
-                sendBtn.IsEnabled = true;
 
                 // Подключаемся ко всем чат-группам и выводим их
                 var chats = await connection.InvokeAsync<List<ChatDto>>("GetUserChats", username);
@@ -243,48 +255,16 @@ namespace WpfClientChat
         }
 
         //Загрузка сообщений выбранного чата
-        private async void SelectChat(ChatDto chat)
+        private void SelectChat(ChatDto chat)
         {
             try
             {
-                currentChat = chat;
-                chatbox.Items.Clear();
-
-                // Загружаем историю по ChatId
-                await connection.InvokeAsync("JoinChat", chat.Id);
-                var messages = await connection.InvokeAsync<List<Message>>("GetMessagesByChatId", chat.Id);
-
-                foreach (var msg in messages.OrderBy(m => m.SentAt))
-                {
-                    chatbox.Items.Add(msg);
-                }
-
-                if (chatbox.Items.Count > 0)
-                {
-                    chatbox.ScrollIntoView(chatbox.Items[chatbox.Items.Count - 1]);
-                }
+                var chatView = new ChatView(connection, chat, username);
+                ChatContentControl.Content = chatView;
             }
             catch(Exception ex)
             {
                 MessageBox.Show($"Ошибка загрузки сообщений: {ex.Message}");
-            }
-        }
-
-        //Отправка сообщения в чат
-        private async void SendMessageToChat_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                var text = messageTextBox.Text.Trim();
-                if (!string.IsNullOrEmpty(text) && currentChat != null)
-                {
-                    await connection.InvokeAsync("SendMessageToChat", currentChat.Id, username, text);
-                    messageTextBox.Clear();
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка отправки: {ex.Message}");
             }
         }
 
@@ -306,20 +286,6 @@ namespace WpfClientChat
             {
                 MessageBox.Show($"Ошибка при отключении: {ex.Message}");
             }
-        }
-
-        //Обработчик загрузки chatbox
-        private void chatbox_Loaded(object sender, RoutedEventArgs e)
-        {
-            chatScrollViewer = GetScrollViewer(chatbox);
-        }
-
-        //Обработчик смены расположения Scroll в chatbox
-        private void chatbox_ScrollChanged(object sender, ScrollChangedEventArgs e)
-        {
-            if (chatScrollViewer == null) return;
-
-            userAtBottom = chatScrollViewer.VerticalOffset >= chatScrollViewer.ScrollableHeight - 1;
         }
 
         //Обработчик изменения текста в строке поиска

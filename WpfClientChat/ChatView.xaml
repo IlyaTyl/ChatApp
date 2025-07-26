@@ -39,7 +39,8 @@
                 </ListBox.ItemTemplate>
             </ListBox>
         </ScrollViewer>
-        <TextBox x:Name="messageTextBox" Grid.Row="2"/>
+        <TextBox x:Name="messageTextBox" Grid.Row="2" TextChanged="messageTextBox_TextChanged"/>
         <Button x:Name="sendBtn" Content="Отправить" Click="SendMessageToChat_Click" Grid.Row="3"/>
+        <Label x:Name="typingIndicator" Content="Печатает..." Visibility="Collapsed" HorizontalAlignment="Left" Margin="0,333,0,0" Grid.Row="1" VerticalAlignment="Top" RenderTransformOrigin="0.527,0.457" Height="28" Grid.RowSpan="2"/>
     </Grid>
 </UserControl>

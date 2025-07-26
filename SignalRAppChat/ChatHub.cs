@@ -421,6 +421,21 @@ namespace SignalRAppChat
                 await Clients.Users(otherUsers).SendAsync("ChatHasBeenDeleted", chatId);
             }
         }
+
+        //Уведомление о наборе текста пользователем
+        public async Task Typing(int chatId, string userName)
+        {
+            var chat = await context.Chats
+                .Include(c => c.ChatUsers)
+                .ThenInclude(cu => cu.User)
+                .FirstOrDefaultAsync(c => c.Id == chatId);
+
+            if (chat != null)
+            {
+                var userNames = chat.ChatUsers.Select(cu => cu.User.UserName).Where(n => n != userName).ToList();
+                await Clients.Users(userNames).SendAsync("UserTyping", chatId, userName);
+            }
+        }
         //Аунтификация
         public async Task<bool> Register(string username, string password)
         {

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.SignalR.Client;
+using SignalRAppChat.Shared.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,8 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using Microsoft.AspNetCore.SignalR.Client;
-using SignalRAppChat.Shared.Models;
+using System.Windows.Threading;
 
 namespace WpfClientChat
 {
@@ -28,12 +29,17 @@ namespace WpfClientChat
 
         private ChatDto currentChat;
         private bool isAdmin = false;
+
+        private Dictionary<string, DateTime> typingUsers = new();
+        private DispatcherTimer typingCleanupTimer;
+
         public ChatView(HubConnection connection, ChatDto chat, string username)
         {
             this.connection = connection;
             this.username = username;
             currentChat = chat;
             InitializeComponent();
+            SetupTypingHandler();
 
             connection.On<Message>("Receive", (chatMessage) =>
             {
@@ -59,6 +65,65 @@ namespace WpfClientChat
                     }
                 });
             });
+        }
+
+        //Создаем таймер и подписываемся на событие печати пользователя
+        private void SetupTypingHandler()
+        {
+            typingCleanupTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+            typingCleanupTimer.Tick += TypingCleanupTimer_Tick;
+            typingCleanupTimer.Start();
+
+            connection.On<int, string>("UserTyping", (chatId, typingUser) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    if (chatId != currentChat.Id || typingUser == username)
+                        return;
+
+                    typingUsers[typingUser] = DateTime.UtcNow;
+                    UpdateTypingIndicator();
+                });
+            });
+        }
+
+        //Метод убирающий непечатающих пользователей
+        private void TypingCleanupTimer_Tick(object? sender, EventArgs e)
+        {
+            var now = DateTime.UtcNow;
+            var expired = typingUsers
+                .Where(kvp => (now - kvp.Value).TotalSeconds > 2)
+                .Select(kvp => kvp.Key)
+                .ToList();
+
+            foreach (var user in expired)
+            {
+                typingUsers.Remove(user);
+            }
+
+            UpdateTypingIndicator();
+        }
+
+        //Метод обновления индикатора печати сообщения
+        private void UpdateTypingIndicator()
+        {
+            if (typingUsers.Count == 0)
+            {
+                typingIndicator.Visibility = Visibility.Collapsed;
+                typingIndicator.Content = "";
+            }
+
+            else if (typingUsers.Count == 1)
+            {
+                var name = typingUsers.Keys.First();
+                typingIndicator.Content = $"{name} пишет...";
+                typingIndicator.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                typingIndicator.Content = "Несколько человек пишут...";
+                typingIndicator.Visibility = Visibility.Visible;
+            }
         }
 
         //Загрузка ChatView
@@ -147,6 +212,7 @@ namespace WpfClientChat
             }
         }
 
+        //Нажатие на кнопку контекстного меню
         private void OptionsButton_Click(object sender, RoutedEventArgs e)
         {
             Button? btn = sender as Button;
@@ -157,6 +223,7 @@ namespace WpfClientChat
             }
         }
 
+        //Нажатие на кнопку удаления чата
         private async void DeleteChat_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -184,6 +251,7 @@ namespace WpfClientChat
             }
         }
 
+        //Нажатие на кнопку удаления истории чата
         private async void ClearChatHistory_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -209,6 +277,15 @@ namespace WpfClientChat
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка {ex.Message}");
+            }
+        }
+
+        //Обработчик изменения текста
+        private async void messageTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if(!string.IsNullOrWhiteSpace(messageTextBox.Text))
+            {
+                await connection.InvokeAsync("Typing", currentChat.Id, username);
             }
         }
     }

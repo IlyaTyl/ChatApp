@@ -9,7 +9,7 @@ namespace SignalRAppChat.Shared.Models
     public class Chat
     {
         public int Id { get; set; }
-        public string Name { get; set; } = null!;
+        public string? Name { get; set; } = null;
         public bool IsGroup { get; set; }
 
         public ICollection<ChatUser> ChatUsers { get; set; } = new List<ChatUser>();

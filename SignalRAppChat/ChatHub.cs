@@ -46,6 +46,8 @@ namespace SignalRAppChat
             var user = await context.Users
                 .Include(u => u.ChatUsers)
                 .ThenInclude(cu => cu.Chat)
+                .ThenInclude(c => c.ChatUsers)
+                .ThenInclude(cu => cu.User)
                 .FirstOrDefaultAsync(u => u.UserName == userName);
 
             if (user == null) return new();
@@ -55,16 +57,23 @@ namespace SignalRAppChat
                 .Distinct()
                 .ToList();
 
-            return chats.Select(c => new ChatDto
+            return chats.Select(c =>
             {
-                Id = c.Id,
-                Name = c.Name,
-                IsGroup = c.IsGroup,
-                Users = c.ChatUsers.Select(cu => new UserDto
+                string? name = c.IsGroup
+                    ? c.Name
+                    : c.ChatUsers.FirstOrDefault(cu => cu.User.UserName != userName)?.User.UserName ?? "Неизвестный";
+
+                return new ChatDto
                 {
-                    Id = cu.User.Id,
-                    UserName = cu.User.UserName
-                }).ToList()
+                    Id = c.Id,
+                    Name = name,
+                    IsGroup = c.IsGroup,
+                    Users = c.ChatUsers.Select(cu => new UserDto
+                    {
+                        Id = cu.User.Id,
+                        UserName = cu.User.UserName
+                    }).ToList()
+                };
             }).ToList();
         }
 
@@ -290,17 +299,17 @@ namespace SignalRAppChat
                 };
             }
 
-            var newChat = new Chat { IsGroup = false , Name = $"{currentUserName} и {targetUserName}" };
+            var newChat = new Chat { IsGroup = false };
             newChat.ChatUsers.Add(new ChatUser { UserId = user1.Id });
             newChat.ChatUsers.Add(new ChatUser { UserId = user2.Id });
 
             context.Chats.Add(newChat);
             await context.SaveChangesAsync();
 
-            var chatDto = new ChatDto
+            var chatDtoCurrent = new ChatDto
             {
                 Id = newChat.Id,
-                Name = newChat.Name,
+                Name = targetUserName,
                 IsGroup = newChat.IsGroup,
                 Users = new List<UserDto>
                 {
@@ -309,8 +318,20 @@ namespace SignalRAppChat
                 }
             };
 
-            await Clients.Users(targetUserName).SendAsync("ReceiveNewPrivateChat", chatDto);
-            return chatDto;
+            var chatDtoTarget = new ChatDto
+            {
+                Id = newChat.Id,
+                Name = currentUserName,
+                IsGroup = newChat.IsGroup,
+                Users = new List<UserDto>
+                {
+                    new UserDto { Id = user1.Id, UserName = user1.UserName },
+                    new UserDto { Id = user2.Id, UserName = user2.UserName }
+                }
+            };
+
+            await Clients.Users(targetUserName).SendAsync("ReceiveNewPrivateChat", chatDtoTarget);
+            return chatDtoCurrent;
         }
 
         //Создание группового чата

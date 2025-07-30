@@ -49,8 +49,12 @@
                         <ListBox x:Name="friendsListBox" SelectionChanged="FriendsListBox_SelectionChanged">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type shared:UserDto}">
-                                    <TextBlock>
-                                        <Run Text="{Binding UserName}" FontWeight="Bold" />
+                                    <TextBlock Text="{Binding UserName}" FontWeight="Bold">
+                                        <TextBlock.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="Удалить друга" Click="RemoveFriend_Click"/>
+                                            </ContextMenu>
+                                        </TextBlock.ContextMenu>
                                     </TextBlock>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>

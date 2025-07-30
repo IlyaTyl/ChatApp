@@ -125,6 +125,18 @@ namespace WpfClientChat
                     ChatContentControl.Content = null;
                 });
             });
+
+            connection.On<UserDto>("FriendRemoved", removedUser =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    var userToRemove = friendsListBox.Items.Cast<UserDto>().FirstOrDefault(u => u.Id == removedUser.Id);
+                    if(userToRemove != null)
+                    {
+                        friendsListBox.Items.Remove(userToRemove);
+                    }
+                });
+            });
         }
 
         public async Task<bool> StartConnectionAsync()
@@ -386,6 +398,35 @@ namespace WpfClientChat
             }
         }
 
+        //Обработчик нажатия кнопки удаления друга
+        private async void RemoveFriend_Click(object sender, RoutedEventArgs e)
+        {
+            if(sender is MenuItem menuItem && menuItem.DataContext is UserDto targetUser)
+            {
+                var result = MessageBox.Show($"Удалить {targetUser.UserName} из друзей?", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+                        bool success = await connection.InvokeAsync<bool>("RemoveFriend", username, targetUser.UserName);
+                        if (success)
+                        {
+                            friendsListBox.Items.Remove(targetUser);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Не удалось удалить друга.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Ошибка удаления друга: {ex.Message}");
+                    }
+                }
+            }
+        }
+
         //Обработчик выбора группового чата
         private void GroupChatsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -410,6 +451,5 @@ namespace WpfClientChat
         {
 
         }
-
     }
 }

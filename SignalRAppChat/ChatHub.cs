@@ -443,6 +443,44 @@ namespace SignalRAppChat
             }
         }
 
+        //Удаление друга
+        public async Task<bool> RemoveFriend(string currentUserName, string targetUserName)
+        {
+            var user = await context.Users.FirstOrDefaultAsync(u => u.UserName == currentUserName);
+            var target = await context.Users.FirstOrDefaultAsync(u => u.UserName == targetUserName);
+
+            if (user == null || target == null)
+                return false;
+
+            var friendships = await context.Friends
+                .Where(f => 
+                (f.UserId == user.Id && f.FriendUserId == target.Id) ||
+                (f.UserId == target.Id && f.FriendUserId == user.Id))
+                .ToListAsync();
+
+            var request = await context.Set<FriendRequest>()
+                .FirstOrDefaultAsync(fr =>
+                (fr.SenderId == user.Id && fr.ReceiverId == target.Id) ||
+                (fr.SenderId == target.Id && fr.ReceiverId == user.Id));
+
+            if (friendships.Count > 0 && request != null)
+            {
+                context.Friends.RemoveRange(friendships);
+                context.Set<FriendRequest>().Remove(request);
+                await context.SaveChangesAsync();
+
+                await Clients.User(targetUserName).SendAsync("FriendRemoved", new UserDto
+                {
+                    Id = user.Id,
+                    UserName = user.UserName,
+                });
+
+                return true;
+            }
+
+            return false;
+        }
+
         //Уведомление о наборе текста пользователем
         public async Task Typing(int chatId, string userName)
         {

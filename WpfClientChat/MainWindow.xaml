@@ -4,9 +4,15 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfClientChat"
+        xmlns:converters="clr-namespace:WpfClientChat.Converter"
         xmlns:shared="clr-namespace:SignalRAppChat.Shared.Models;assembly=SignalRAppChat.Shared"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="450" Closing="Window_Closing" WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <converters:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
+    </Window.Resources>
+        
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200px"/>
@@ -37,10 +43,32 @@
                 <TabItem Header="Чаты">
                     <StackPanel>
                         <TextBlock Text="Личные чаты"/>
-                        <ListBox x:Name="privateChatsListBox" DisplayMemberPath="Name" SelectionChanged="PrivateChatsListBox_SelectionChanged"/>
+                        <ListBox x:Name="privateChatsListBox" SelectionChanged="PrivateChatsListBox_SelectionChanged">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type shared:ChatDto}">
+                                    <StackPanel Orientation="Horizontal" Margin="2">
+                                        <TextBlock Text="{Binding Name}"/>
+                                        <TextBlock Text=" (" Foreground="Red" Visibility="{Binding UnreadCount, Converter={StaticResource IntToVisibilityConverter}}"/>
+                                        <TextBlock Text="{Binding UnreadCount}" Foreground="Red" Visibility="{Binding UnreadCount, Converter={StaticResource IntToVisibilityConverter}}"/>
+                                        <TextBlock Text=")" Foreground="Red" Visibility="{Binding UnreadCount, Converter={StaticResource IntToVisibilityConverter}}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                         <TextBlock Text="Групповые чаты"/>
                         <Button x:Name="addGroupChat" Content="Создать групповой чат" Click="AddGroupChat_Click"/>
-                        <ListBox x:Name="groupChatsListBox" DisplayMemberPath="Name" SelectionChanged="GroupChatsListBox_SelectionChanged"/>
+                        <ListBox x:Name="groupChatsListBox" SelectionChanged="GroupChatsListBox_SelectionChanged">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type shared:ChatDto}">
+                                    <StackPanel Orientation="Horizontal" Margin="2">
+                                        <TextBlock Text="{Binding Name}"/>
+                                        <TextBlock Text=" (" Foreground="Red" Visibility="{Binding UnreadCount, Converter={StaticResource IntToVisibilityConverter}}"/>
+                                        <TextBlock Text="{Binding UnreadCount}" Foreground="Red" Visibility="{Binding UnreadCount, Converter={StaticResource IntToVisibilityConverter}}"/>
+                                        <TextBlock Text=")" Foreground="Red" Visibility="{Binding UnreadCount, Converter={StaticResource IntToVisibilityConverter}}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                     </StackPanel>
                 </TabItem>
                 <TabItem Header="Друзья">

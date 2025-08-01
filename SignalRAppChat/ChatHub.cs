@@ -44,10 +44,14 @@ namespace SignalRAppChat
         public async Task<List<ChatDto>> GetUserChats(string userName)
         {
             var user = await context.Users
-                .Include(u => u.ChatUsers)
+            .Include(u => u.ChatUsers)
                 .ThenInclude(cu => cu.Chat)
-                .ThenInclude(c => c.ChatUsers)
-                .ThenInclude(cu => cu.User)
+                    .ThenInclude(c => c.ChatUsers)
+                        .ThenInclude(cu => cu.User)
+            .Include(u => u.ChatUsers)
+                .ThenInclude(cu => cu.Chat)
+                    .ThenInclude(c => c.Messages)
+                        .ThenInclude(m => m.MessageReads)
                 .FirstOrDefaultAsync(u => u.UserName == userName);
 
             if (user == null) return new();
@@ -68,11 +72,16 @@ namespace SignalRAppChat
                     Id = c.Id,
                     Name = name,
                     IsGroup = c.IsGroup,
+
                     Users = c.ChatUsers.Select(cu => new UserDto
                     {
                         Id = cu.User.Id,
                         UserName = cu.User.UserName
-                    }).ToList()
+                    }).ToList(),
+
+                    UnreadCount = c.Messages
+                    .SelectMany(m => m.MessageReads)
+                    .Count(mr => mr.User.UserName == userName && !mr.IsRead)
                 };
             }).ToList();
         }
@@ -151,10 +160,60 @@ namespace SignalRAppChat
                 Text = text
             };
 
+            var messageDto = new MessageDto
+            {
+                Id = chatMessage.Id,
+                ChatId = chatMessage.ChatId,
+                UserName = chatMessage.UserName,
+                Text = chatMessage.Text,
+                SentAt = chatMessage.SentAt
+            };
+
+            var chat = await context.Chats
+                .Include(c => c.ChatUsers)
+                .ThenInclude(cu => cu.User)
+                .FirstOrDefaultAsync(c => c.Id == chatId);
+            if (chat == null) return;
+
+            //Создание отметок непрочитанности для всех пользователей кроме отправителя
+            foreach (var chatUser in chat.ChatUsers)
+            {
+                if(chatUser.UserId != user.Id)
+                {
+                    chatMessage.MessageReads.Add(new MessageRead
+                    {
+                        UserId = chatUser.UserId,
+                        IsRead = false
+                    });
+                }    
+            }
+
             context.Messages.Add(chatMessage);
             await context.SaveChangesAsync();
 
-            await this.Clients.Group($"chat_{chatId}").SendAsync("Receive", chatMessage);
+            await Clients.Group($"chat_{chatId}").SendAsync("Receive", messageDto);
+
+            var userNames = chat.ChatUsers.Select(cu => cu.User.UserName).Where(n => n != senderUsername).ToList();
+            await Clients.Users(userNames).SendAsync("ReceiveHighlightChat", chatId);
+        }
+
+        //При открытии чата отмечаем все как прочитанное
+        public async Task MarkMessagesAsRead(int chatId, string username)
+        {
+            var user = await context.Users.FirstOrDefaultAsync(u => u.UserName == username);
+            if (user == null) return;
+
+            var unreadMessages = await context.MessageReads
+                .Include(mr => mr.Message)
+                .Where(mr => mr.Message.ChatId == chatId && mr.UserId == user.Id && !mr.IsRead)
+                .ToListAsync();
+
+            foreach (var msgRead in unreadMessages)
+            {
+                msgRead.IsRead = true;
+            }
+
+            await context.SaveChangesAsync();
         }
 
         //Отправка запроса в друзья

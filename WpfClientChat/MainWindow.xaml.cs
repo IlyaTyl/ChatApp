@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using SignalRAppChat.Shared.Models;
 using System;
+using System.CodeDom;
+using System.Collections.ObjectModel;
 using System.Security.RightsManagement;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,23 +30,28 @@ namespace WpfClientChat
 
         private ChatDto? currentChat = null;
 
+        public ObservableCollection<ChatDto> PrivateChats { get; set; } = new();
+        public ObservableCollection<ChatDto> GroupChats { get; set; } = new();
+
         public MainWindow(string userName)
         {
             InitializeComponent();
             username = userName;
+            privateChatsListBox.ItemsSource = PrivateChats;
+            groupChatsListBox.ItemsSource = GroupChats;
 
             connection = new HubConnectionBuilder()
                 .WithUrl($"https://localhost:7226/chat?username={username}")
                 .WithAutomaticReconnect()
                 .Build();
 
-            connection.On<Message>("Receive", (chatMessage) =>
+            connection.On<int>("ReceiveHighlightChat", chatId =>
             {
                 Dispatcher.Invoke(() =>
                 {
-                    if (currentChat == null || chatMessage.ChatId != currentChat.Id)
+                    if (currentChat == null || chatId != currentChat.Id)
                     {
-                        HighlightChat(chatMessage.ChatId);
+                        HighlightChat(chatId);
                     }
                 });
             });
@@ -53,7 +60,7 @@ namespace WpfClientChat
             {
                 Dispatcher.Invoke(() =>
                 {
-                    groupChatsListBox.Items.Add(chat);
+                    GroupChats.Add(chat);
                 });
             });
 
@@ -61,7 +68,7 @@ namespace WpfClientChat
             {
                 Dispatcher.Invoke(() =>
                 {   
-                    privateChatsListBox.Items.Add(chat);
+                    PrivateChats.Add(chat);
                 });
             });
 
@@ -110,17 +117,17 @@ namespace WpfClientChat
             {
                 Dispatcher.Invoke(() =>
                 {
-                    var privateChat = privateChatsListBox.Items
+                    var privateChat = PrivateChats
                         .OfType<ChatDto>()
                         .FirstOrDefault(c => c.Id == deletedChatId);
                     if (privateChat != null)
-                        privateChatsListBox.Items.Remove(privateChat);
+                        PrivateChats.Remove(privateChat);
 
-                    var groupChat = groupChatsListBox.Items
+                    var groupChat = GroupChats
                         .OfType<ChatDto>()
                         .FirstOrDefault(c => c.Id == deletedChatId);
                     if (groupChat != null)
-                        groupChatsListBox.Items.Remove(groupChat);
+                        GroupChats.Remove(groupChat);
 
                     ChatContentControl.Content = null;
                 });
@@ -154,11 +161,11 @@ namespace WpfClientChat
                 {
                     if (chat.IsGroup)
                     {
-                        groupChatsListBox.Items.Add(chat);
+                        GroupChats.Add(chat);
                     }
                     else
                     {
-                        privateChatsListBox.Items.Add(chat);
+                        PrivateChats.Add(chat);
                     }
                 }
 
@@ -243,12 +250,14 @@ namespace WpfClientChat
         //Счетчик новых сообщений в чате
         private void HighlightChat(int chatId)
         {
-            foreach (ChatDto chat in privateChatsListBox.Items)
+            var chat = PrivateChats.FirstOrDefault(c => c.Id == chatId);
+
+            if (chat == null)
+                chat = GroupChats.FirstOrDefault(c => c.Id == chatId);
+
+            if(chat != null)
             {
-                if(chat.Id == chatId)
-                {
-                    //Будущая реализация UnreadCount
-                }
+                chat.UnreadCount++;
             }
         }
 
@@ -271,6 +280,11 @@ namespace WpfClientChat
         {
             try
             {
+                currentChat = chat;
+
+                //Ставим значение пропущенных сообщений на 0
+                chat.UnreadCount = 0;
+                //Открываем представление ChatView с выбранным чатом
                 var chatView = new ChatView(connection, chat, username);
                 ChatContentControl.Content = chatView;
             }
@@ -333,11 +347,11 @@ namespace WpfClientChat
 
                     if (chat != null)
                     {
-                        var exists = privateChatsListBox.Items.Cast<ChatDto>().Any(c => c.Id == chat.Id);
+                        var exists = PrivateChats.Cast<ChatDto>().Any(c => c.Id == chat.Id);
 
                         if(!exists)
                         {
-                            privateChatsListBox.Items.Add(chat);
+                            PrivateChats.Add(chat);
                         }
 
                         // Автоматически переходим в чат
@@ -367,7 +381,7 @@ namespace WpfClientChat
 
             if (result == true && createGroupChatWindow.CreatedChat != null)
             {
-                groupChatsListBox.Items.Add(createGroupChatWindow.CreatedChat);
+                GroupChats.Add(createGroupChatWindow.CreatedChat);
                 SelectChat(createGroupChatWindow.CreatedChat);
             }
         }

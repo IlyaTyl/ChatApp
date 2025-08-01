@@ -15,6 +15,8 @@ namespace SignalRAppChat.Data
         public DbSet<ChatUser> ChatUsers { get; set; }
         public DbSet<FriendRequest> FriendRequests { get; set; }
         public DbSet<Friend> Friends { get; set; }
+        public DbSet<MessageRead> MessageReads { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -56,6 +58,18 @@ namespace SignalRAppChat.Data
                 .WithMany(u => u.FriendOf)
                 .HasForeignKey(f => f.FriendUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<MessageRead>()
+                .HasOne(mr => mr.User)
+                .WithMany(u => u.MessageReads)
+                .HasForeignKey(mr => mr.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<MessageRead>()
+                .HasOne(mr => mr.Message)
+                .WithMany(m => m.MessageReads)
+                .HasForeignKey(m => m.MessageId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

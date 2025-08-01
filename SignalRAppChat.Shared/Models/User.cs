@@ -16,5 +16,7 @@ namespace SignalRAppChat.Shared.Models
         public ICollection<FriendRequest> ReceivedFriendRequests {  get; set; } = new List<FriendRequest>();
         public ICollection<Friend> Friends { get; set; } = new List<Friend>();
         public ICollection<Friend> FriendOf { get; set; } = new List<Friend>();
+        public ICollection<MessageRead> MessageReads { get; set; } = new List<MessageRead>();
+
     }
 }

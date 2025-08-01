@@ -41,7 +41,7 @@ namespace WpfClientChat
             InitializeComponent();
             SetupTypingHandler();
 
-            connection.On<Message>("Receive", (chatMessage) =>
+            connection.On<MessageDto>("Receive", (chatMessage) =>
             {
                 Dispatcher.Invoke(() =>
                 {
@@ -134,7 +134,10 @@ namespace WpfClientChat
                 chatbox.Items.Clear();
                 chatTitle.Text = currentChat.Name;
 
-                // Загружаем историю по ChatId
+                //Уведомляем сервер, что сообщения прочтены
+                await connection.InvokeAsync("MarkMessagesAsRead", currentChat.Id, username);
+
+                //Загружаем историю по ChatId
                 await connection.InvokeAsync("JoinChat", currentChat.Id);
                 var messages = await connection.InvokeAsync<List<Message>>("GetMessagesByChatId", currentChat.Id);
 

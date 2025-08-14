@@ -296,26 +296,44 @@ namespace WpfClientChat
 
         private async void SendImageButton_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new Microsoft.Win32.OpenFileDialog
+            try
             {
-                Filter = "Images|*.jpg;*.png;*.gif;*.bmp"
-            };
-
-            if(dlg.ShowDialog() == true)
-            {
-                var fileInfo = new FileInfo(dlg.FileName);
-
-                if (fileInfo.Length > 10 * 1024 * 1024)
+                var dlg = new Microsoft.Win32.OpenFileDialog
                 {
-                    MessageBox.Show("Размер файла не должен превышать 10 МБ.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
+                    Filter = "Images|*.jpg;*.png;*.gif;*.bmp",
+                    Multiselect = true
+                };
+
+                if (dlg.ShowDialog() == true)
+                {
+                    foreach (var filePath in dlg.FileNames)
+                    {
+                        var fileInfo = new FileInfo(filePath);
+
+                        if (fileInfo.Length > 10 * 1024 * 1024)
+                        {
+                            MessageBox.Show("Размер файла не должен превышать 10 МБ.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                            continue;
+                        }
+
+                        byte[] fileBytes = File.ReadAllBytes(filePath);
+
+                        string imagePath = await connection.InvokeAsync<string>("UploadImage", fileBytes, System.IO.Path.GetFileName(filePath));
+
+                        var text = messageTextBox.Text.Trim();
+                        if (!string.IsNullOrEmpty(text))
+                        {
+                            await connection.InvokeAsync("SendMessageToChat", currentChat.Id, username, text, imagePath);
+                            messageTextBox.Clear();
+                        }    
+                        else
+                            await connection.InvokeAsync("SendMessageToChat", currentChat.Id, username, null, imagePath);
+                    }
                 }
-
-                byte[] fileBytes = File.ReadAllBytes(dlg.FileName);
-
-                string imagePath = await connection.InvokeAsync<string>("UploadImage", fileBytes, System.IO.Path.GetFileName(dlg.FileName));
-
-                await connection.InvokeAsync("SendMessageToChat", currentChat.Id, username, null, imagePath);
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show($"Ошибка отправки изображения: {ex.Message}");
             }
         }
     }

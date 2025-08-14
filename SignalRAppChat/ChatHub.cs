@@ -31,6 +31,25 @@ namespace SignalRAppChat
             return chatUser?.IsAdmin ?? false;
         }
 
+        //Загрузка фото на сервер
+        public async Task<string> UploadImage(byte[] imageBytes, string fileName)
+        {
+            var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+
+            if (!Directory.Exists(uploadsPath))
+            {
+                Directory.CreateDirectory(uploadsPath);
+            }
+
+            var ext = Path.GetExtension(fileName);
+            var uniqueFileName = $"{Guid.NewGuid()}{ext}";
+            var filePath = Path.Combine(uploadsPath, uniqueFileName);
+
+            await File.WriteAllBytesAsync(filePath, imageBytes);
+
+            return $"https://localhost:7226/uploads/{uniqueFileName}";
+        }
+
         //Вывод сообщений по чат-id
         public async Task<List<Message>> GetMessagesByChatId(int chatId)
         {
@@ -147,7 +166,7 @@ namespace SignalRAppChat
         }
 
         //Отправка сообщения
-        public async Task SendMessageToChat(int chatId, string senderUsername, string text)
+        public async Task SendMessageToChat(int chatId, string senderUsername, string? text, string? imagePath)
         {
             var user = await context.Users.FirstOrDefaultAsync(u => u.UserName == senderUsername);
             if (user == null) return;
@@ -157,7 +176,8 @@ namespace SignalRAppChat
                 ChatId = chatId,
                 UserId = user.Id,
                 UserName = senderUsername,
-                Text = text
+                Text = text,
+                ImagePath = imagePath
             };
 
             var messageDto = new MessageDto
@@ -166,6 +186,7 @@ namespace SignalRAppChat
                 ChatId = chatMessage.ChatId,
                 UserName = chatMessage.UserName,
                 Text = chatMessage.Text,
+                ImagePath = chatMessage.ImagePath,
                 SentAt = chatMessage.SentAt
             };
 
@@ -178,14 +199,14 @@ namespace SignalRAppChat
             //Создание отметок непрочитанности для всех пользователей кроме отправителя
             foreach (var chatUser in chat.ChatUsers)
             {
-                if(chatUser.UserId != user.Id)
+                if (chatUser.UserId != user.Id)
                 {
                     chatMessage.MessageReads.Add(new MessageRead
                     {
                         UserId = chatUser.UserId,
                         IsRead = false
                     });
-                }    
+                }
             }
 
             context.Messages.Add(chatMessage);

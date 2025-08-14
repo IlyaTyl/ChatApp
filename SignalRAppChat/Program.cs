@@ -10,7 +10,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 //
 
-builder.Services.AddSignalR();
+builder.Services.AddSignalR(o =>
+{
+    o.MaximumReceiveMessageSize = 1024 * 1024 * 10;
+});
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {

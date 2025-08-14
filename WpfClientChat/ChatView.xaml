@@ -4,12 +4,17 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:WpfClientChat"
+             xmlns:converters="clr-namespace:WpfClientChat.Converter"
              xmlns:shared="clr-namespace:SignalRAppChat.Shared.Models;assembly=SignalRAppChat.Shared"
              Height="Auto" Width="Auto" Loaded="UserControl_Loaded">
-    <Grid>
+    <UserControl.Resources>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+    </UserControl.Resources>
+        <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -28,19 +33,24 @@
             <ListBox x:Name="chatbox" Height="360" Width="250" Loaded="chatbox_Loaded" ScrollViewer.ScrollChanged="chatbox_ScrollChanged">
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type shared:Message}">
-                        <TextBlock>
-                        <Run Text="{Binding SentAt, StringFormat='{}{0:HH:mm}'}"/>
-                        <Run Text=" " />
-                        <Run Text="{Binding UserName}" FontWeight="Bold" />
-                        <Run Text=": " />
-                        <Run Text="{Binding Text}" />
-                        </TextBlock>
+                        <StackPanel>
+                            <TextBlock>
+                                <Run Text="{Binding SentAt, StringFormat='{}{0:HH:mm}'}"/>
+                                <Run Text=" " />
+                                <Run Text="{Binding UserName}" FontWeight="Bold" />
+                                <Run Text=": " />
+                                <Run Text="{Binding Text}" />
+                            </TextBlock>
+                            <Image Height="150" Width="150" Stretch="Uniform" Visibility="{Binding ImagePath, Converter={StaticResource NullToVisibilityConverter}}" Source="{Binding ImagePath, TargetNullValue={x:Null}}">
+                            </Image>
+                        </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
         </ScrollViewer>
         <TextBox x:Name="messageTextBox" Grid.Row="2" TextChanged="messageTextBox_TextChanged"/>
         <Button x:Name="sendBtn" Content="Отправить" Click="SendMessageToChat_Click" Grid.Row="3"/>
+        <Button x:Name="selectImageBtn" Content="Выбрать фото" Click="SendImageButton_Click" Grid.Row="4"/>
         <Label x:Name="typingIndicator" Content="Печатает..." Visibility="Collapsed" HorizontalAlignment="Left" Margin="0,333,0,0" Grid.Row="1" VerticalAlignment="Top" RenderTransformOrigin="0.527,0.457" Height="28" Grid.RowSpan="2"/>
     </Grid>
 </UserControl>

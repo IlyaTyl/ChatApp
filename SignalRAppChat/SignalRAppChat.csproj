@@ -23,4 +23,8 @@
     <ProjectReference Include="..\SignalRAppChat.Shared\SignalRAppChat.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\uploads\" />
+  </ItemGroup>
+
 </Project>

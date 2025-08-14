@@ -297,21 +297,7 @@ namespace WpfClientChat
         //Закрытие окна
         private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            try
-            {
-                if (connection.State == HubConnectionState.Connected)
-                {
-                    if (currentChat != null)
-                    {
-                        await connection.InvokeAsync("SendMessageToChat", currentChat.Id, "", $"Пользователь {username} выходит из чата");
-                    }
-                    await connection.StopAsync();
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при отключении: {ex.Message}");
-            }
+            //Будущая реализация
         }
 
         //Обработчик изменения текста в строке поиска

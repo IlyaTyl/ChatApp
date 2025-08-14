@@ -2,7 +2,9 @@
 using SignalRAppChat.Shared.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -31,7 +33,7 @@ namespace WpfClientChat
         private bool isAdmin = false;
 
         private Dictionary<string, DateTime> typingUsers = new();
-        private DispatcherTimer typingCleanupTimer;
+        private DispatcherTimer? typingCleanupTimer;
 
         public ChatView(HubConnection connection, ChatDto chat, string username)
         {
@@ -205,7 +207,7 @@ namespace WpfClientChat
                 var text = messageTextBox.Text.Trim();
                 if (!string.IsNullOrEmpty(text) && currentChat != null)
                 {
-                    await connection.InvokeAsync("SendMessageToChat", currentChat.Id, username, text);
+                    await connection.InvokeAsync("SendMessageToChat", currentChat.Id, username, text, null);
                     messageTextBox.Clear();
                 }
             }
@@ -289,6 +291,31 @@ namespace WpfClientChat
             if(!string.IsNullOrWhiteSpace(messageTextBox.Text))
             {
                 await connection.InvokeAsync("Typing", currentChat.Id, username);
+            }
+        }
+
+        private async void SendImageButton_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Images|*.jpg;*.png;*.gif;*.bmp"
+            };
+
+            if(dlg.ShowDialog() == true)
+            {
+                var fileInfo = new FileInfo(dlg.FileName);
+
+                if (fileInfo.Length > 10 * 1024 * 1024)
+                {
+                    MessageBox.Show("Размер файла не должен превышать 10 МБ.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                byte[] fileBytes = File.ReadAllBytes(dlg.FileName);
+
+                string imagePath = await connection.InvokeAsync<string>("UploadImage", fileBytes, System.IO.Path.GetFileName(dlg.FileName));
+
+                await connection.InvokeAsync("SendMessageToChat", currentChat.Id, username, null, imagePath);
             }
         }
     }

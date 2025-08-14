@@ -11,7 +11,8 @@ namespace SignalRAppChat.Shared.Models
         public int Id { get; set; }
         public int ChatId { get; set; }
         public string UserName { get; set; } = null!;
-        public string Text { get; set; } = null!;
+        public string? Text { get; set; }
+        public string? ImagePath { get; set; }
         public DateTime SentAt { get; set; }
     }
 }

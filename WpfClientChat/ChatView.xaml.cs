@@ -294,7 +294,7 @@ namespace WpfClientChat
             }
         }
 
-        private async void SendImageButton_Click(object sender, RoutedEventArgs e)
+        private void SendImageButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -306,29 +306,8 @@ namespace WpfClientChat
 
                 if (dlg.ShowDialog() == true)
                 {
-                    foreach (var filePath in dlg.FileNames)
-                    {
-                        var fileInfo = new FileInfo(filePath);
-
-                        if (fileInfo.Length > 10 * 1024 * 1024)
-                        {
-                            MessageBox.Show("Размер файла не должен превышать 10 МБ.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                            continue;
-                        }
-
-                        byte[] fileBytes = File.ReadAllBytes(filePath);
-
-                        string imagePath = await connection.InvokeAsync<string>("UploadImage", fileBytes, System.IO.Path.GetFileName(filePath));
-
-                        var text = messageTextBox.Text.Trim();
-                        if (!string.IsNullOrEmpty(text))
-                        {
-                            await connection.InvokeAsync("SendMessageToChat", currentChat.Id, username, text, imagePath);
-                            messageTextBox.Clear();
-                        }    
-                        else
-                            await connection.InvokeAsync("SendMessageToChat", currentChat.Id, username, null, imagePath);
-                    }
+                    var previewWindow = new ImagePreviewWindow(dlg.FileNames, connection, currentChat, username);
+                    previewWindow.ShowDialog();
                 }
             }
             catch(Exception ex)

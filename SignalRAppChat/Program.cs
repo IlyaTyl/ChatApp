@@ -12,7 +12,7 @@ builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 
 builder.Services.AddSignalR(o =>
 {
-    o.MaximumReceiveMessageSize = 1024 * 1024 * 10;
+    o.MaximumReceiveMessageSize = 1024 * 1024 * 50;
 });
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

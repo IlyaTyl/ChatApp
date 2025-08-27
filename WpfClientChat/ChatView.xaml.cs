@@ -207,7 +207,7 @@ namespace WpfClientChat
                 var text = messageTextBox.Text.Trim();
                 if (!string.IsNullOrEmpty(text) && currentChat != null)
                 {
-                    await connection.InvokeAsync("SendMessageToChat", currentChat.Id, username, text, null);
+                    await connection.InvokeAsync("SendMessageToChat", currentChat.Id, username, text, null, null, MessageType.Text);
                     messageTextBox.Clear();
                 }
             }
@@ -294,6 +294,17 @@ namespace WpfClientChat
             }
         }
 
+        //Обработчик нажатие на кнопку прикрепления файла
+        private void AttachFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button? btn = sender as Button;
+            if (btn?.ContextMenu != null)
+            {
+                btn.ContextMenu.PlacementTarget = btn;
+                btn.ContextMenu.IsOpen = true;
+            }
+        }
+
         private void SendImageButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -310,9 +321,53 @@ namespace WpfClientChat
                     previewWindow.ShowDialog();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка отправки изображения: {ex.Message}");
+            }
+        }
+
+        private void SendDocButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var dlg = new Microsoft.Win32.OpenFileDialog
+                {
+                    Filter = "All files|*.*",
+                    Multiselect = true
+                };
+
+                if (dlg.ShowDialog() == true)
+                {
+                    var previewWindow = new ImagePreviewWindow(dlg.FileNames, connection, currentChat, username);
+                    previewWindow.ShowDialog();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка отправки изображения: {ex.Message}");
+            }
+        }
+
+        private void SendVideoButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var dlg = new Microsoft.Win32.OpenFileDialog
+                {
+                    Filter = "Video|*.mp4;*.avi;*.mov;*.wmv;*.mkv",
+                    Multiselect = true
+                };
+
+                if (dlg.ShowDialog() == true)
+                {
+                    var previewWindow = new ImagePreviewWindow(dlg.FileNames, connection, currentChat, username);
+                    previewWindow.ShowDialog();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка отправки видео: {ex.Message}");
             }
         }
     }

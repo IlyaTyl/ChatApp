@@ -12,7 +12,9 @@ namespace SignalRAppChat.Shared.Models
         public int ChatId { get; set; }
         public string UserName { get; set; } = null!;
         public string? Text { get; set; }
-        public string? ImagePath { get; set; }
+        public string? FilePath { get; set; }
+        public string? OriginalFileName { get; set; }
+        public MessageType Type { get; set; }
         public DateTime SentAt { get; set; }
     }
 }

@@ -1,28 +1,21 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using SignalRAppChat.Shared.Models;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data.Common;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace WpfClientChat
 {
-    public class PreviewImage
+    public class PreviewFile
     {
         public string Path { get; set; } = null!;
         public string? Caption { get; set; }
+        public MessageType Type { get; set; }
+        public BitmapSource? PreviewImage =>
+            Type == MessageType.Video ? VideoPreviewHelper.GetThumbnail(Path) : null;
+        public string FileName => System.IO.Path.GetFileName(Path);
     }
 
     public partial class ImagePreviewWindow : Window
@@ -30,13 +23,17 @@ namespace WpfClientChat
         private HubConnection connection;
         private ChatDto currentChat;
         private string currentUsername;
-        public ObservableCollection<PreviewImage> Images { get; set; }
+        public ObservableCollection<PreviewFile> Files { get; set; }
 
         public ImagePreviewWindow(IEnumerable<string> filePaths, HubConnection hubConnection, ChatDto chat, string username)
         {
             InitializeComponent();
-            Images = new ObservableCollection<PreviewImage>(
-                filePaths.Select(p => new PreviewImage { Path = p })
+            Files = new ObservableCollection<PreviewFile>(
+                filePaths.Select(p => new PreviewFile 
+                { 
+                    Path = p,
+                    Type = FileTypeHelper.GetMessageTypeByExtension(System.IO.Path.GetExtension(p))
+                })
             );
             DataContext = this;
 
@@ -47,34 +44,36 @@ namespace WpfClientChat
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var img in Images)
+            foreach (var file in Files)
             {
-                var fileInfo = new FileInfo(img.Path);
+                var fileInfo = new FileInfo(file.Path);
 
-                if (fileInfo.Length > 10 * 1024 * 1024)
+                if (fileInfo.Length > 50 * 1024 * 1024)
                 {
-                    MessageBox.Show("Размер файла не должен превышать 10 МБ.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Размер файла не должен превышать 50 МБ.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                     continue;
                 }
 
-                byte[] fileBytes = File.ReadAllBytes(img.Path);
+                byte[] fileBytes = File.ReadAllBytes(file.Path);
 
-                string imagePath = await connection.InvokeAsync<string>("UploadImage", fileBytes, fileInfo.Name);
+                string fileUrl = await connection.InvokeAsync<string>("UploadFile", fileBytes, fileInfo.Name);
 
-                await connection.InvokeAsync("SendMessageToChat", currentChat.Id, currentUsername, img.Caption, imagePath);
+                var type = FileTypeHelper.GetMessageTypeByExtension(fileInfo.Extension);
+
+                await connection.InvokeAsync("SendMessageToChat", currentChat.Id, currentUsername, file.Caption, fileUrl, fileInfo.Name, type);
             }
             Close();
-        }
-
-        private void RemoveImage_Click(object sender, RoutedEventArgs e)
-        {
-            if(sender is Button btn && btn.Tag is PreviewImage img && Images.Contains(img))
-                Images.Remove(img);
         }
 
         private void CancelSendButton_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void RemoveFile_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is PreviewFile file && Files.Contains(file))
+                Files.Remove(file);
         }
     }
 }

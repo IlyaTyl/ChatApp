@@ -32,7 +32,7 @@ namespace SignalRAppChat
         }
 
         //Загрузка фото на сервер
-        public async Task<string> UploadImage(byte[] imageBytes, string fileName)
+        public async Task<string> UploadFile(byte[] fileBytes, string fileName)
         {
             var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
 
@@ -45,7 +45,7 @@ namespace SignalRAppChat
             var uniqueFileName = $"{Guid.NewGuid()}{ext}";
             var filePath = Path.Combine(uploadsPath, uniqueFileName);
 
-            await File.WriteAllBytesAsync(filePath, imageBytes);
+            await File.WriteAllBytesAsync(filePath, fileBytes);
 
             return $"https://localhost:7226/uploads/{uniqueFileName}";
         }
@@ -166,7 +166,7 @@ namespace SignalRAppChat
         }
 
         //Отправка сообщения
-        public async Task SendMessageToChat(int chatId, string senderUsername, string? text, string? imagePath)
+        public async Task SendMessageToChat(int chatId, string senderUsername, string? text, string? filePath, string? fileName, MessageType type)
         {
             var user = await context.Users.FirstOrDefaultAsync(u => u.UserName == senderUsername);
             if (user == null) return;
@@ -177,7 +177,9 @@ namespace SignalRAppChat
                 UserId = user.Id,
                 UserName = senderUsername,
                 Text = text,
-                ImagePath = imagePath
+                FilePath = filePath,
+                OriginalFileName = fileName,
+                Type = type
             };
 
             var messageDto = new MessageDto
@@ -186,8 +188,10 @@ namespace SignalRAppChat
                 ChatId = chatMessage.ChatId,
                 UserName = chatMessage.UserName,
                 Text = chatMessage.Text,
-                ImagePath = chatMessage.ImagePath,
-                SentAt = chatMessage.SentAt
+                FilePath = chatMessage.FilePath,
+                OriginalFileName = chatMessage.OriginalFileName,
+                SentAt = chatMessage.SentAt,
+                Type = chatMessage.Type
             };
 
             var chat = await context.Chats

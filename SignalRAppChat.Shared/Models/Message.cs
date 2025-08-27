@@ -6,6 +6,13 @@ using System.Threading.Tasks;
 
 namespace SignalRAppChat.Shared.Models
 {
+    public enum MessageType
+    {
+        Text,
+        Image,
+        Video,
+        File
+    }
     public class Message
     {
         public int Id { get; set; }
@@ -15,11 +22,10 @@ namespace SignalRAppChat.Shared.Models
         public User User { get; set; } = null!;
         public string UserName { get; set; } = null!;
         public string? Text { get; set; }
-
-        public string? ImagePath { get; set; }
-
+        public string? FilePath { get; set; }
+        public string? OriginalFileName { get; set; }
+        public MessageType Type { get; set; }
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
-
         public ICollection<MessageRead> MessageReads { get; set; } = new List<MessageRead>();
 
     }

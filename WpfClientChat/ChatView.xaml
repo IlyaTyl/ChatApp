@@ -9,12 +9,71 @@
              Height="Auto" Width="Auto" Loaded="UserControl_Loaded">
     <UserControl.Resources>
         <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <converters:FileIconConverter x:Key="FileIconConverter"/>
+
+        <DataTemplate x:Key="TextTemplate" DataType="{x:Type shared:Message}">
+            <StackPanel>
+                <TextBlock>
+                    <Run Text="{Binding SentAt, StringFormat='{}{0:HH:mm}'}"/>
+                    <Run Text=" " />
+                    <Run Text="{Binding UserName}" FontWeight="Bold" />
+                    <Run Text=": " />
+                    <Run Text="{Binding Text}" />
+                </TextBlock>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ImageTemplate" DataType="{x:Type shared:Message}">
+            <StackPanel>
+                <TextBlock>
+                     <Run Text="{Binding SentAt, StringFormat='{}{0:HH:mm}'}"/>
+                     <Run Text=" " />
+                     <Run Text="{Binding UserName}" FontWeight="Bold" />
+                     <Run Text=": " />
+                     <Run Text="{Binding Text}" />
+                </TextBlock>
+                <Image Height="150" Width="150" Stretch="Uniform" Visibility="{Binding FilePath, Converter={StaticResource NullToVisibilityConverter}}" Source="{Binding FilePath, TargetNullValue={x:Null}}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="VideoTemplate" DataType="{x:Type shared:Message}">
+            <StackPanel>
+                <TextBlock>
+                     <Run Text="{Binding SentAt, StringFormat='{}{0:HH:mm}'}"/>
+                     <Run Text=" " />
+                     <Run Text="{Binding UserName}" FontWeight="Bold" />
+                     <Run Text=": " />
+                     <Run Text="{Binding Text}" />
+                </TextBlock>
+                <MediaElement Source="{Binding FilePath}" Height="150" LoadedBehavior="Play" UnloadedBehavior="Stop" Volume="0"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="FileTemplate" DataType="{x:Type shared:Message}">
+            <StackPanel>
+                <TextBlock>
+                     <Run Text="{Binding SentAt, StringFormat='{}{0:HH:mm}'}"/>
+                     <Run Text=" " />
+                     <Run Text="{Binding UserName}" FontWeight="Bold" />
+                     <Run Text=": " />
+                     <Run Text="{Binding Text}" />
+                </TextBlock>
+                <Image Width="32" Height="32" Margin="0,0,5,0" Source="{Binding FilePath, Converter={StaticResource FileIconConverter}}"/>
+                <TextBlock Text="{Binding OriginalFileName}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <local:MessageTemplateSelector x:Key="MessageTemplateSelector"
+                                        TextTemplate="{StaticResource TextTemplate}"
+                                        ImageTemplate="{StaticResource ImageTemplate}"
+                                        VideoTemplate="{StaticResource VideoTemplate}"
+                                        FileTemplate="{StaticResource FileTemplate}"/>
+        
     </UserControl.Resources>
         <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -29,28 +88,33 @@
                 </Button.ContextMenu>
             </Button>
         </DockPanel>
+            
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <ListBox x:Name="chatbox" Height="360" Width="250" Loaded="chatbox_Loaded" ScrollViewer.ScrollChanged="chatbox_ScrollChanged">
-                <ListBox.ItemTemplate>
-                    <DataTemplate DataType="{x:Type shared:Message}">
-                        <StackPanel>
-                            <TextBlock>
-                                <Run Text="{Binding SentAt, StringFormat='{}{0:HH:mm}'}"/>
-                                <Run Text=" " />
-                                <Run Text="{Binding UserName}" FontWeight="Bold" />
-                                <Run Text=": " />
-                                <Run Text="{Binding Text}" />
-                            </TextBlock>
-                            <Image Height="150" Width="150" Stretch="Uniform" Visibility="{Binding ImagePath, Converter={StaticResource NullToVisibilityConverter}}" Source="{Binding ImagePath, TargetNullValue={x:Null}}">
-                            </Image>
-                        </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+            <ListBox x:Name="chatbox" ItemsSource="{Binding Messages}"  ItemTemplateSelector="{StaticResource MessageTemplateSelector}" Height="360" Width="250" Loaded="chatbox_Loaded" ScrollViewer.ScrollChanged="chatbox_ScrollChanged"/>
         </ScrollViewer>
-        <TextBox x:Name="messageTextBox" Grid.Row="2" TextChanged="messageTextBox_TextChanged"/>
-        <Button x:Name="sendBtn" Content="Отправить" Click="SendMessageToChat_Click" Grid.Row="3"/>
-        <Button x:Name="selectImageBtn" Content="Выбрать фото" Click="SendImageButton_Click" Grid.Row="4"/>
+
+        <Grid Grid.Row="2" Background="White">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBox x:Name="messageTextBox" Grid.Column="0" TextChanged="messageTextBox_TextChanged" Margin="0,0,5,0"/>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Background="White" Margin="5">
+                <Button x:Name="sendBtn" Content="Отпр." Click="SendMessageToChat_Click"/>
+                <Button x:Name="attachFileBtn" Content="Пр." Click="AttachFileButton_Click">
+                    <Button.ContextMenu>
+                        <ContextMenu Placement="Left">
+                            <MenuItem x:Name="selectImageBtn" Header="Добавить фото" Click="SendImageButton_Click"/>
+                            <MenuItem x:Name="selectVideoBtn" Header="Добавить видео" Click="SendVideoButton_Click"/>
+                            <MenuItem x:Name="selectDocBtn" Header="Добавить документ" Click="SendDocButton_Click"/>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
+            </StackPanel>
+        </Grid>
+            
         <Label x:Name="typingIndicator" Content="Печатает..." Visibility="Collapsed" HorizontalAlignment="Left" Margin="0,333,0,0" Grid.Row="1" VerticalAlignment="Top" RenderTransformOrigin="0.527,0.457" Height="28" Grid.RowSpan="2"/>
     </Grid>
 </UserControl>

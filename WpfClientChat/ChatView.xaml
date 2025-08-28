@@ -5,13 +5,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:WpfClientChat"
              xmlns:converters="clr-namespace:WpfClientChat.Converter"
-             xmlns:shared="clr-namespace:SignalRAppChat.Shared.Models;assembly=SignalRAppChat.Shared"
+             xmlns:sharedEntity="clr-namespace:SignalRAppChat.Shared.Models.Entity;assembly=SignalRAppChat.Shared"
              Height="Auto" Width="Auto" Loaded="UserControl_Loaded">
     <UserControl.Resources>
         <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <converters:FileIconConverter x:Key="FileIconConverter"/>
 
-        <DataTemplate x:Key="TextTemplate" DataType="{x:Type shared:Message}">
+        <DataTemplate x:Key="TextTemplate" DataType="{x:Type sharedEntity:Message}">
             <StackPanel>
                 <TextBlock>
                     <Run Text="{Binding SentAt, StringFormat='{}{0:HH:mm}'}"/>
@@ -23,7 +23,7 @@
             </StackPanel>
         </DataTemplate>
 
-        <DataTemplate x:Key="ImageTemplate" DataType="{x:Type shared:Message}">
+        <DataTemplate x:Key="ImageTemplate" DataType="{x:Type sharedEntity:Message}">
             <StackPanel>
                 <TextBlock>
                      <Run Text="{Binding SentAt, StringFormat='{}{0:HH:mm}'}"/>
@@ -36,7 +36,7 @@
             </StackPanel>
         </DataTemplate>
 
-        <DataTemplate x:Key="VideoTemplate" DataType="{x:Type shared:Message}">
+        <DataTemplate x:Key="VideoTemplate" DataType="{x:Type sharedEntity:Message}">
             <StackPanel>
                 <TextBlock>
                      <Run Text="{Binding SentAt, StringFormat='{}{0:HH:mm}'}"/>
@@ -49,7 +49,7 @@
             </StackPanel>
         </DataTemplate>
 
-        <DataTemplate x:Key="FileTemplate" DataType="{x:Type shared:Message}">
+        <DataTemplate x:Key="FileTemplate" DataType="{x:Type sharedEntity:Message}">
             <StackPanel>
                 <TextBlock>
                      <Run Text="{Binding SentAt, StringFormat='{}{0:HH:mm}'}"/>

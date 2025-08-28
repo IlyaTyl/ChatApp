@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SignalRAppChat.Shared.Models;
+using SignalRAppChat.Shared.Models.Entity;
 using System.Security.Cryptography;
 
 namespace SignalRAppChat.Data

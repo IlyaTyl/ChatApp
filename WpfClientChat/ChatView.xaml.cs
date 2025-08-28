@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
-using SignalRAppChat.Shared.Models;
+using SignalRAppChat.Shared.Models.Dto;
+using SignalRAppChat.Shared.Models.Entity;
 using System;
 using System.Collections.Generic;
 using System.IO;

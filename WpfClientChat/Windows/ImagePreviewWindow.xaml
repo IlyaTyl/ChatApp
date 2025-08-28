@@ -1,0 +1,60 @@
+﻿<Window x:Class="WpfClientChat.ImagePreviewWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WpfClientChat"
+        xmlns:converters="clr-namespace:WpfClientChat.Converter"
+        mc:Ignorable="d"
+        Title="ImagePreviewWindow" Height="500" Width="800">
+
+    <Window.Resources>
+        <converters:FileIconConverter x:Key="FileIconConverter"/>
+        
+        <DataTemplate x:Key="ImageTemplate">
+            <StackPanel>
+                <Image Source="{Binding Path}" Height="150" Stretch="Uniform"/>
+                <TextBox Text="{Binding Caption}" Margin="0,5,0,0"/>
+                <Button Content="Удалить" Click="RemoveFile_Click" Tag="{Binding}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="VideoTemplate">
+            <StackPanel>
+                <Image Source="{Binding PreviewImage}" Height="150" Stretch="Uniform"/>
+                <TextBox Text="{Binding Caption}" Margin="0,5,0,0"/>
+                <Button Content="Удалить" Click="RemoveFile_Click" Tag="{Binding}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="FileTemplate">
+            <StackPanel Orientation="Horizontal">
+                <Image Width="32" Height="32" Margin="0,0,5,0" Source="{Binding Path, Converter={StaticResource FileIconConverter}}"/>
+                <TextBlock Text="{Binding FileName}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBox Text="{Binding Caption}" Width="200" Margin="0,0,10,0"/>
+                <Button Content="Удалить" Click="RemoveFile_Click" Tag="{Binding}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <local:FileTemplateSelector x:Key="FileTemplateSelector" 
+                                    ImageTemplate="{StaticResource ImageTemplate}"
+                                    VideoTemplate="{StaticResource VideoTemplate}"
+                                    FileTemplate="{StaticResource FileTemplate}"/>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <ScrollViewer>
+            <ItemsControl ItemsSource="{Binding Files}" ItemTemplateSelector="{StaticResource FileTemplateSelector}"/>
+        </ScrollViewer>
+        
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
+            <Button Content="Отправить" Height="40" Width="100" Margin="5" Click="SendButton_Click"/>
+            <Button Content="Отмена" Height="40" Width="100" Margin="5" Click="CancelSendButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

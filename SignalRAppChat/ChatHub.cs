@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using SignalRAppChat.Data;
-using SignalRAppChat.Shared.Models;
+using SignalRAppChat.Shared.Models.Dto;
+using SignalRAppChat.Shared.Models.Entity;
 
 namespace SignalRAppChat
 {

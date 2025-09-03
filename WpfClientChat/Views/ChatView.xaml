@@ -32,7 +32,8 @@
                      <Run Text=": " />
                      <Run Text="{Binding Text}" />
                 </TextBlock>
-                <Image Height="150" Width="150" Stretch="Uniform" Visibility="{Binding FilePath, Converter={StaticResource NullToVisibilityConverter}}" Source="{Binding FilePath, TargetNullValue={x:Null}}"/>
+                <Image Height="150" Width="150" Stretch="Uniform" Visibility="{Binding LocalPath, Converter={StaticResource NullToVisibilityConverter}}" Source="{Binding LocalPath, TargetNullValue={x:Null}}"/>
+                <Button Content="Открыть" Click="OpenFile_Click" Tag="{Binding}"/>
             </StackPanel>
         </DataTemplate>
 
@@ -45,7 +46,8 @@
                      <Run Text=": " />
                      <Run Text="{Binding Text}" />
                 </TextBlock>
-                <MediaElement Source="{Binding FilePath}" Height="150" LoadedBehavior="Play" UnloadedBehavior="Stop" Volume="0"/>
+                <MediaElement Source="{Binding LocalPath}" Height="150" LoadedBehavior="Play" UnloadedBehavior="Stop" Volume="0"/>
+                <Button Content="Открыть" Click="OpenFile_Click" Tag="{Binding}"/>
             </StackPanel>
         </DataTemplate>
 
@@ -58,7 +60,8 @@
                      <Run Text=": " />
                      <Run Text="{Binding Text}" />
                 </TextBlock>
-                <Image Width="32" Height="32" Margin="0,0,5,0" Source="{Binding FilePath, Converter={StaticResource FileIconConverter}}"/>
+                <Image Width="32" Height="32" Margin="0,0,5,0" Source="{Binding LocalPath, Converter={StaticResource FileIconConverter}}"/>
+                <Button Content="Открыть" Click="OpenFile_Click" Tag="{Binding}"/>
                 <TextBlock Text="{Binding OriginalFileName}" VerticalAlignment="Center" Margin="0,0,10,0"/>
             </StackPanel>
         </DataTemplate>

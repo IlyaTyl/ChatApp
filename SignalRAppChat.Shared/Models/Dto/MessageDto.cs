@@ -17,5 +17,7 @@ namespace SignalRAppChat.Shared.Models.Dto
         public string? OriginalFileName { get; set; }
         public MessageType Type { get; set; }
         public DateTime SentAt { get; set; }
+
+        public string? LocalPath { get; set; }
     }
 }

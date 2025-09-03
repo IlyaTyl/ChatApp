@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using WpfClientChat.Helper;
+using WpfClientChat.Service;
 
 namespace WpfClientChat
 {
@@ -25,6 +26,7 @@ namespace WpfClientChat
         private HubConnection connection;
         private ChatDto currentChat;
         private string currentUsername;
+        private FileCacheService fileCacheService = new FileCacheService();
         public ObservableCollection<PreviewFile> Files { get; set; }
 
         public ImagePreviewWindow(IEnumerable<string> filePaths, HubConnection hubConnection, ChatDto chat, string username)
@@ -59,6 +61,8 @@ namespace WpfClientChat
                 byte[] fileBytes = File.ReadAllBytes(file.Path);
 
                 string fileUrl = await connection.InvokeAsync<string>("UploadFile", fileBytes, fileInfo.Name);
+
+                await fileCacheService.SaveToCacheAsync(Path.GetFileName(fileUrl), fileBytes);
 
                 var type = FileTypeHelper.GetMessageTypeByExtension(fileInfo.Extension);
 

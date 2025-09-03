@@ -18,6 +18,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using WpfClientChat.Service;
 
 namespace WpfClientChat
 {
@@ -36,6 +37,8 @@ namespace WpfClientChat
         private Dictionary<string, DateTime> typingUsers = new();
         private DispatcherTimer? typingCleanupTimer;
 
+        private readonly FileCacheService fileCacheService = new FileCacheService();
+
         public ChatView(HubConnection connection, ChatDto chat, string username)
         {
             this.connection = connection;
@@ -50,6 +53,18 @@ namespace WpfClientChat
                 {
                     if (chatMessage.ChatId == currentChat.Id)
                     {
+                        if (!string.IsNullOrEmpty(chatMessage.OriginalFileName) && !string.IsNullOrEmpty(chatMessage.FilePath))
+                        {
+                            if (fileCacheService.TryGetCachedFile(chatMessage.OriginalFileName, out string cachedPath))
+                            {
+                                chatMessage.LocalPath = cachedPath;
+                            }
+                            else
+                            {
+                                chatMessage.LocalPath = chatMessage.FilePath;
+                            }
+                        }
+
                         chatbox.Items.Add(chatMessage);
 
                         if (userAtBottom)
@@ -68,6 +83,62 @@ namespace WpfClientChat
                     }
                 });
             });
+        }
+
+        //Загрузка ChatView
+        private async void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                chatbox.Items.Clear();
+                chatTitle.Text = currentChat.Name;
+
+                //Уведомляем сервер, что сообщения прочтены
+                await connection.InvokeAsync("MarkMessagesAsRead", currentChat.Id, username);
+
+                //Загружаем историю по ChatId
+                await connection.InvokeAsync("JoinChat", currentChat.Id);
+                var messages = await connection.InvokeAsync<List<Message>>("GetMessagesByChatId", currentChat.Id);
+
+                foreach (var msg in messages.OrderBy(m => m.SentAt))
+                {
+                    if(!string.IsNullOrEmpty(msg.FilePath) && !string.IsNullOrEmpty(msg.OriginalFileName))
+                    {
+                        //Проверка, есть ли файл в кэше
+                        if(fileCacheService.TryGetCachedFile(msg.OriginalFileName, out string cachedFile))
+                        {
+                            msg.LocalPath = cachedFile;
+                        }
+                        else
+                        {
+                            msg.LocalPath = msg.FilePath;
+                        }
+                    }
+
+                    chatbox.Items.Add(msg);
+                }
+
+                if (chatbox.Items.Count > 0)
+                {
+                    chatbox.ScrollIntoView(chatbox.Items[chatbox.Items.Count - 1]);
+                }
+
+                if (currentChat.IsGroup)
+                {
+                    isAdmin = await connection.InvokeAsync<bool>("IsUserAdmin", currentChat.Id, username);
+                }
+                else
+                {
+                    isAdmin = true;
+                }
+
+                deleteChatMenuItem.Visibility = isAdmin || !currentChat.IsGroup ? Visibility.Visible : Visibility.Collapsed;
+                clearChatHistoryMenuItem.Visibility = isAdmin || !currentChat.IsGroup ? Visibility.Visible : Visibility.Collapsed;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка загрузки сообщений: {ex.Message}");
+            }
         }
 
         //Создаем таймер и подписываемся на событие печати пользователя
@@ -126,49 +197,6 @@ namespace WpfClientChat
             {
                 typingIndicator.Content = "Несколько человек пишут...";
                 typingIndicator.Visibility = Visibility.Visible;
-            }
-        }
-
-        //Загрузка ChatView
-        private async void UserControl_Loaded(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                chatbox.Items.Clear();
-                chatTitle.Text = currentChat.Name;
-
-                //Уведомляем сервер, что сообщения прочтены
-                await connection.InvokeAsync("MarkMessagesAsRead", currentChat.Id, username);
-
-                //Загружаем историю по ChatId
-                await connection.InvokeAsync("JoinChat", currentChat.Id);
-                var messages = await connection.InvokeAsync<List<Message>>("GetMessagesByChatId", currentChat.Id);
-
-                foreach (var msg in messages.OrderBy(m => m.SentAt))
-                {
-                    chatbox.Items.Add(msg);
-                }
-
-                if (chatbox.Items.Count > 0)
-                {
-                    chatbox.ScrollIntoView(chatbox.Items[chatbox.Items.Count - 1]);
-                }
-
-                if(currentChat.IsGroup)
-                {
-                    isAdmin = await connection.InvokeAsync<bool>("IsUserAdmin", currentChat.Id, username);
-                }
-                else
-                {
-                    isAdmin = true;
-                }
-
-                deleteChatMenuItem.Visibility = isAdmin || !currentChat.IsGroup ? Visibility.Visible : Visibility.Collapsed;
-                clearChatHistoryMenuItem.Visibility = isAdmin || !currentChat.IsGroup ? Visibility.Visible : Visibility.Collapsed;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка загрузки сообщений: {ex.Message}");
             }
         }
 
@@ -305,7 +333,7 @@ namespace WpfClientChat
                 btn.ContextMenu.IsOpen = true;
             }
         }
-
+        //Обработчик нажатие на кнопку отправки картинки
         private void SendImageButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -328,6 +356,7 @@ namespace WpfClientChat
             }
         }
 
+        //Обработчик нажатие на кнопку отправки любого документа
         private void SendDocButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -346,10 +375,11 @@ namespace WpfClientChat
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка отправки изображения: {ex.Message}");
+                MessageBox.Show($"Ошибка отправки документа: {ex.Message}");
             }
         }
 
+        //Обработчик нажатие на кнопку отправки видео
         private void SendVideoButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -369,6 +399,37 @@ namespace WpfClientChat
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка отправки видео: {ex.Message}");
+            }
+        }
+
+        //Сохранение файла в кэш
+        private async void OpenFile_Click(object sender, RoutedEventArgs e)
+        {
+            if(sender is Button btn && btn.Tag is Message msg)
+            {
+                try
+                {
+                    if (string.IsNullOrEmpty(msg.FilePath) || string.IsNullOrEmpty(msg.OriginalFileName))
+                    {
+                        return;
+                    }
+
+                    //Если нет в кэше, то качаем и используем из кэша
+                    if(!fileCacheService.TryGetCachedFile(msg.OriginalFileName, out string cachedPath))
+                    {
+                        cachedPath = await fileCacheService.GetOrDownloadFileAsync(System.IO.Path.GetFileName(msg.FilePath), msg.FilePath);
+                        msg.LocalPath = cachedPath;
+                    }
+                    
+                    //Будущая реализация открытия самого файла
+                    //
+                    // ...
+                    //
+                }
+                catch(Exception ex)
+                {
+                    MessageBox.Show($"Ошибка открытия файла: {ex.Message}");
+                }
             }
         }
     }

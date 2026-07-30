@@ -481,22 +481,41 @@ namespace WpfClientChat
 
         }
 
-        private void searchDownloadTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void SearchDownloadTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
 
         }
 
-        private void searchDownloadButton_Click(object sender, RoutedEventArgs e)
+        private void SearchDownloadButton_Click(object sender, RoutedEventArgs e)
         {
 
         }
 
-        private void downloadsListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private void DownloadsListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (downloadsListBox.SelectedItem is PreviewFile downloadFile)
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = downloadFile.Path,
+                        UseShellExecute = true
+                    });
+                }
+                catch(Exception ex)
+                {
+                    MessageBox.Show($"Не удалось открыть файл: {ex.Message}");
+                }
+            }
+        }
+
+        private void DeleteDownloadFile_Click(object sender, RoutedEventArgs e)
         {
 
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void MainTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
 
         }

@@ -73,7 +73,7 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            <TabControl Grid.Column="0" TabStripPlacement="Left" Grid.Row="2">
+            <TabControl Grid.Column="0" Grid.Row="2" x:Name="MainTabControl" TabStripPlacement="Left" SelectionChanged="MainTabControl_SelectionChanged">
                 <TabItem Header="Чаты">
                     <StackPanel>
                         <TextBlock Text="Личные чаты"/>
@@ -140,11 +140,11 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox x:Name="searchDownloadTextBox" Grid.Column="0" HorizontalAlignment="Stretch" Margin="0,0,5,0" TextChanged="searchDownloadTextBox_TextChanged"/>
-                            <Button x:Name="searchDownloadButton" Content="Поиск" Grid.Column="1" Click='searchDownloadButton_Click'/>
+                            <TextBox x:Name="searchDownloadTextBox" Grid.Column="0" HorizontalAlignment="Stretch" Margin="0,0,5,0" TextChanged="SearchDownloadTextBox_TextChanged"/>
+                            <Button x:Name="searchDownloadButton" Content="Поиск" Grid.Column="1" Click='SearchDownloadButton_Click'/>
                         </Grid>
                         <ListBox Grid.Row="2" x:Name="downloadsListBox"
-                            ItemTemplateSelector="{StaticResource FileTemplateSelector}" MouseDoubleClick="downloadsListBox_MouseDoubleClick">
+                            ItemTemplateSelector="{StaticResource FileTemplateSelector}" MouseDoubleClick="DownloadsListBox_MouseDoubleClick">
                         </ListBox>
                     </Grid>
                 </TabItem>

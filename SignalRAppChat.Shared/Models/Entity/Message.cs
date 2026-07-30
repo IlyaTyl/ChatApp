@@ -12,6 +12,7 @@ namespace SignalRAppChat.Shared.Models.Entity
         Text,
         Image,
         Video,
+        Download,
         File
     }
     public class Message

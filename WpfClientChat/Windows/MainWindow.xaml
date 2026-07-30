@@ -11,6 +11,40 @@
 
     <Window.Resources>
         <converters:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
+        <converters:FileIconConverter x:Key="FileIconConverter"/>
+
+        <DataTemplate x:Key="ImageTemplate">
+            <StackPanel Orientation="Horizontal">
+                <Image Width="32" Height="32" Margin="0,0,5,0" 
+                   Source="{Binding Path, Converter={StaticResource FileIconConverter}}"/>
+                <TextBlock Text="{Binding FileName}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <Button Content="Удалить" Width="25" Height="25" Click="DeleteDownloadFile_Click" Tag="{Binding}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="VideoTemplate">
+            <StackPanel Orientation="Horizontal">
+                <Image Width="32" Height="32" Margin="0,0,5,0" 
+                   Source="{Binding Path, Converter={StaticResource FileIconConverter}}"/>
+                <TextBlock Text="{Binding FileName}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <Button Content="Удалить" Width="25" Height="25" Click="DeleteDownloadFile_Click" Tag="{Binding}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="FileTemplate">
+            <StackPanel Orientation="Horizontal">
+                <Image Width="32" Height="32" Margin="0,0,5,0" 
+                   Source="{Binding Path, Converter={StaticResource FileIconConverter}}"/>
+                <TextBlock Text="{Binding FileName}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <Button Content="Удалить" Width="25" Height="25" Click="DeleteDownloadFile_Click" Tag="{Binding}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <local:FileTemplateSelector x:Key="FileTemplateSelector" 
+                                ImageTemplate="{StaticResource ImageTemplate}"
+                                VideoTemplate="{StaticResource VideoTemplate}"
+                                FileTemplate="{StaticResource FileTemplate}"/>
+        
     </Window.Resources>
         
     <Grid>
@@ -90,6 +124,29 @@
                         <TextBlock Text="Запросы в друзья"/>
                         <ListBox x:Name="requestFriendsListBox" SelectionChanged="RequestFriendsListBox_SelectionChanged"/>
                     </StackPanel>
+                </TabItem>
+                <TabItem Header="Загрузки">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="Список загрузок" Grid.Row="0"/>
+
+                        <Grid Grid.Row="1" Margin="0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="searchDownloadTextBox" Grid.Column="0" HorizontalAlignment="Stretch" Margin="0,0,5,0" TextChanged="searchDownloadTextBox_TextChanged"/>
+                            <Button x:Name="searchDownloadButton" Content="Поиск" Grid.Column="1" Click='searchDownloadButton_Click'/>
+                        </Grid>
+                        <ListBox Grid.Row="2" x:Name="downloadsListBox"
+                            ItemTemplateSelector="{StaticResource FileTemplateSelector}" MouseDoubleClick="downloadsListBox_MouseDoubleClick">
+                        </ListBox>
+                    </Grid>
                 </TabItem>
             </TabControl>
         </Grid>

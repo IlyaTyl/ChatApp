@@ -9,11 +9,26 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Images\avi.png" />
+    <None Remove="Images\bmp.png" />
     <None Remove="Images\doc.png" />
     <None Remove="Images\file.png" />
+    <None Remove="Images\gif.png" />
+    <None Remove="Images\jpg.png" />
+    <None Remove="Images\mkv.png" />
+    <None Remove="Images\mov.png" />
+    <None Remove="Images\mp4.png" />
     <None Remove="Images\pdf.png" />
     <None Remove="Images\pdf_icon.png" />
+    <None Remove="Images\png.png" />
+    <None Remove="Images\wmv.png" />
     <None Remove="Images\xls.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Images\mov.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>
@@ -28,13 +43,37 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Images\avi.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\bmp.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Images\doc.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\file.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Images\gif.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\jpg.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\mkv.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\mp4.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Images\pdf.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\png.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\wmv.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\xls.png">

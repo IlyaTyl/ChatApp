@@ -3,6 +3,7 @@ using SignalRAppChat.Shared.Models.Dto;
 using System;
 using System.CodeDom;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Security.RightsManagement;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +16,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using WpfClientChat.Helper;
+using WpfClientChat.Service;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace WpfClientChat
@@ -33,12 +36,16 @@ namespace WpfClientChat
         public ObservableCollection<ChatDto> PrivateChats { get; set; } = new();
         public ObservableCollection<ChatDto> GroupChats { get; set; } = new();
 
+        private ObservableCollection<PreviewFile> downloadFiles;
+
         public MainWindow(string userName)
         {
             InitializeComponent();
             username = userName;
             privateChatsListBox.ItemsSource = PrivateChats;
             groupChatsListBox.ItemsSource = GroupChats;
+
+            LoadDownloads();
 
             connection = new HubConnectionBuilder()
                 .WithUrl($"https://localhost:7226/chat?username={username}")
@@ -144,6 +151,28 @@ namespace WpfClientChat
                     }
                 });
             });
+        }
+
+        //Вывод загруженных файлов
+
+        private void LoadDownloads()
+        {
+            string downloadsFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MyChatApp", "DownloadsFiles");
+
+            if (!Directory.Exists(downloadsFolder))
+            {
+                Directory.CreateDirectory(downloadsFolder);
+            }
+
+            var files = Directory.GetFiles(downloadsFolder)
+            .Select(filePath => new PreviewFile
+            {
+                Path = filePath,
+                Type = FileTypeHelper.GetMessageTypeByExtension(System.IO.Path.GetExtension(filePath))
+            });
+
+            downloadFiles = new ObservableCollection<PreviewFile>(files);
+            downloadsListBox.ItemsSource = downloadFiles;
         }
 
         public async Task<bool> StartConnectionAsync()
@@ -448,6 +477,26 @@ namespace WpfClientChat
         }
 
         private void RequestFriendsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void searchDownloadTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
+
+        private void searchDownloadButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void downloadsListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
 
         }

@@ -28,6 +28,25 @@ namespace WpfClientChat.Converter
                     case ".xls":
                     case ".xlsx":
                         return new BitmapImage(new Uri("/Images/xls.png", UriKind.Relative));
+                    case ".jpg":
+                    case ".jpeg":
+                        return new BitmapImage(new Uri("/Images/jpg.png", UriKind.Relative));
+                    case ".png":
+                        return new BitmapImage(new Uri("/Images/png.png", UriKind.Relative));
+                    case ".gif":
+                        return new BitmapImage(new Uri("/Images/gif.png", UriKind.Relative));
+                    case ".bmp":
+                        return new BitmapImage(new Uri("/Images/bmp.png", UriKind.Relative));
+                    case ".mp4":
+                        return new BitmapImage(new Uri("/Images/mp4.png", UriKind.Relative));
+                    case ".avi":
+                        return new BitmapImage(new Uri("/Images/avi.png", UriKind.Relative));
+                    case ".mov":
+                        return new BitmapImage(new Uri("/Images/mov.png", UriKind.Relative));
+                    case ".mkv":
+                        return new BitmapImage(new Uri("/Images/mkv.png", UriKind.Relative));
+                    case ".wmv":
+                        return new BitmapImage(new Uri("/Images/wmv.png", UriKind.Relative));
 
                     default:
                         return new BitmapImage(new Uri("/Images/file.png", UriKind.Relative));

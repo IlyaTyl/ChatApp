@@ -102,10 +102,10 @@ namespace WpfClientChat
 
                 foreach (var msg in messages.OrderBy(m => m.SentAt))
                 {
-                    if(!string.IsNullOrEmpty(msg.FilePath) && !string.IsNullOrEmpty(msg.OriginalFileName))
+                    if (!string.IsNullOrEmpty(msg.FilePath) && !string.IsNullOrEmpty(msg.OriginalFileName))
                     {
                         //Проверка, есть ли файл в кэше
-                        if(fileCacheService.TryGetCachedFile(msg.OriginalFileName, out string cachedFile))
+                        if (fileCacheService.TryGetCachedFile(msg.OriginalFileName, out string cachedFile))
                         {
                             msg.LocalPath = cachedFile;
                         }
@@ -279,7 +279,7 @@ namespace WpfClientChat
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка удаления чата: {ex.Message}");
             }
@@ -317,7 +317,7 @@ namespace WpfClientChat
         //Обработчик изменения текста
         private async void messageTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if(!string.IsNullOrWhiteSpace(messageTextBox.Text))
+            if (!string.IsNullOrWhiteSpace(messageTextBox.Text))
             {
                 await connection.InvokeAsync("Typing", currentChat.Id, username);
             }
@@ -405,7 +405,7 @@ namespace WpfClientChat
         //Сохранение файла в кэш
         private async void OpenFile_Click(object sender, RoutedEventArgs e)
         {
-            if(sender is Button btn && btn.Tag is Message msg)
+            if (sender is Button btn && btn.Tag is Message msg)
             {
                 try
                 {
@@ -415,20 +415,57 @@ namespace WpfClientChat
                     }
 
                     //Если нет в кэше, то качаем и используем из кэша
-                    if(!fileCacheService.TryGetCachedFile(msg.OriginalFileName, out string cachedPath))
+                    if (!fileCacheService.TryGetCachedFile(msg.OriginalFileName, out string cachedPath))
                     {
                         cachedPath = await fileCacheService.GetOrDownloadFileAsync(System.IO.Path.GetFileName(msg.FilePath), msg.FilePath);
                         msg.LocalPath = cachedPath;
                     }
-                    
+
                     //Будущая реализация открытия самого файла
                     //
                     // ...
                     //
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     MessageBox.Show($"Ошибка открытия файла: {ex.Message}");
+                }
+            }
+        }
+
+        private async void DownloadFile_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is Message msg)
+            {
+                try
+                {
+                    if (string.IsNullOrEmpty(msg.FilePath) || string.IsNullOrEmpty(msg.OriginalFileName))
+                    {
+                        MessageBox.Show("Нет данных для скачивания.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    if (!fileCacheService.TryGetCachedFile(msg.OriginalFileName, out string cachedPath))
+                    {
+                        cachedPath = await fileCacheService.GetOrDownloadFileAsync(System.IO.Path.GetFileName(msg.FilePath), msg.FilePath);
+                        msg.LocalPath = cachedPath;
+                    }
+
+                    string downloadFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MyChatApp", "DownloadsFiles");
+
+                    if (!Directory.Exists(downloadFolder))
+                    {
+                        Directory.CreateDirectory(downloadFolder);
+                    }
+
+                    string downloadPath = System.IO.Path.Combine(downloadFolder, msg.OriginalFileName);
+                    System.IO.File.Copy(cachedPath, downloadPath, overwrite: true);
+                    MessageBox.Show($"Файл сохранён: {downloadPath}", "Готово", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                }
+                catch(Exception ex)
+                {
+                    MessageBox.Show($"Ошибка при скачивании: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }

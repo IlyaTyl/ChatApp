@@ -33,7 +33,10 @@
                      <Run Text="{Binding Text}" />
                 </TextBlock>
                 <Image Height="150" Width="150" Stretch="Uniform" Visibility="{Binding LocalPath, Converter={StaticResource NullToVisibilityConverter}}" Source="{Binding LocalPath, TargetNullValue={x:Null}}"/>
-                <Button Content="Открыть" Click="OpenFile_Click" Tag="{Binding}"/>
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="Открыть" Click="OpenFile_Click" Tag="{Binding}"/>
+                    <Button Content="Скачать" Click="DownloadFile_Click" Tag="{Binding}"/>
+                </StackPanel>
             </StackPanel>
         </DataTemplate>
 
@@ -47,7 +50,10 @@
                      <Run Text="{Binding Text}" />
                 </TextBlock>
                 <MediaElement Source="{Binding LocalPath}" Height="150" LoadedBehavior="Play" UnloadedBehavior="Stop" Volume="0"/>
-                <Button Content="Открыть" Click="OpenFile_Click" Tag="{Binding}"/>
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="Открыть" Click="OpenFile_Click" Tag="{Binding}"/>
+                    <Button Content="Скачать" Click="DownloadFile_Click" Tag="{Binding}"/>
+                </StackPanel>
             </StackPanel>
         </DataTemplate>
 
@@ -61,7 +67,10 @@
                      <Run Text="{Binding Text}" />
                 </TextBlock>
                 <Image Width="32" Height="32" Margin="0,0,5,0" Source="{Binding LocalPath, Converter={StaticResource FileIconConverter}}"/>
-                <Button Content="Открыть" Click="OpenFile_Click" Tag="{Binding}"/>
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="Открыть" Click="OpenFile_Click" Tag="{Binding}"/>
+                    <Button Content="Скачать" Click="DownloadFile_Click" Tag="{Binding}"/>
+                </StackPanel>
                 <TextBlock Text="{Binding OriginalFileName}" VerticalAlignment="Center" Margin="0,0,10,0"/>
             </StackPanel>
         </DataTemplate>

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
+using MS.WindowsAPICodePack.Internal;
 using SignalRAppChat.Shared.Models.Dto;
 using System;
 using System.CodeDom;
@@ -491,6 +492,7 @@ namespace WpfClientChat
 
         }
 
+        //Открытие скачанного файла двойным нажатием
         private void DownloadsListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (downloadsListBox.SelectedItem is PreviewFile downloadFile)
@@ -510,14 +512,38 @@ namespace WpfClientChat
             }
         }
 
+        //Удаление скаченных файлов
         private void DeleteDownloadFile_Click(object sender, RoutedEventArgs e)
         {
+            if(sender is Button btn && btn.Tag is PreviewFile downloadFile)
+            {
+                var result = MessageBox.Show($"Удалить файл \"{downloadFile.FileName}\"?", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
+                if (result == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+                        if(File.Exists(downloadFile.Path))
+                            File.Delete(downloadFile.Path);
+
+                        downloadFiles.Remove(downloadFile);
+                    }
+                    catch(Exception ex)
+                    {
+                        MessageBox.Show($"Ошибка при удалении: {ex.Message}");
+                    }
+                }
+            }
         }
+
+
 
         private void MainTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-
+            if(e.Source is TabControl tabControl && tabControl.SelectedItem is TabItem tabItem)
+            {
+                
+            }
         }
     }
 }

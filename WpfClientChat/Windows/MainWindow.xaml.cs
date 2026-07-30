@@ -4,6 +4,7 @@ using SignalRAppChat.Shared.Models.Dto;
 using System;
 using System.CodeDom;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Security.RightsManagement;
 using System.Text;
@@ -38,6 +39,10 @@ namespace WpfClientChat
         public ObservableCollection<ChatDto> GroupChats { get; set; } = new();
 
         private ObservableCollection<PreviewFile> downloadFiles;
+        private readonly string downloadsFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MyChatApp", "DownloadsFiles");
+
+        // Отображаемая коллекция для поиска
+        private ICollectionView downloadsView;
 
         public MainWindow(string userName)
         {
@@ -47,6 +52,9 @@ namespace WpfClientChat
             groupChatsListBox.ItemsSource = GroupChats;
 
             LoadDownloads();
+
+            downloadsView = CollectionViewSource.GetDefaultView(downloadFiles);
+            downloadsListBox.ItemsSource = downloadFiles;
 
             connection = new HubConnectionBuilder()
                 .WithUrl($"https://localhost:7226/chat?username={username}")
@@ -158,8 +166,6 @@ namespace WpfClientChat
 
         private void LoadDownloads()
         {
-            string downloadsFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MyChatApp", "DownloadsFiles");
-
             if (!Directory.Exists(downloadsFolder))
             {
                 Directory.CreateDirectory(downloadsFolder);
@@ -173,7 +179,6 @@ namespace WpfClientChat
             });
 
             downloadFiles = new ObservableCollection<PreviewFile>(files);
-            downloadsListBox.ItemsSource = downloadFiles;
         }
 
         public async Task<bool> StartConnectionAsync()
@@ -484,12 +489,12 @@ namespace WpfClientChat
 
         private void SearchDownloadTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-
+            ApplySearchFilter(searchDownloadTextBox.Text);
         }
 
         private void SearchDownloadButton_Click(object sender, RoutedEventArgs e)
         {
-
+            ApplySearchFilter(searchDownloadTextBox.Text);
         }
 
         //Открытие скачанного файла двойным нажатием
@@ -536,13 +541,53 @@ namespace WpfClientChat
             }
         }
 
+        private void RefreshDownloadList()
+        {
+            downloadFiles.Clear();
+            if (Directory.Exists(downloadsFolder))
+            {
+                var files = Directory.GetFiles(downloadsFolder);
+                foreach(var filePath in files)
+                {
+                    downloadFiles.Add(new PreviewFile
+                    {
+                        Path = filePath,
+                        Type = FileTypeHelper.GetMessageTypeByExtension(System.IO.Path.GetExtension(filePath))
+                    });
+                }
+            }
 
+            ApplySearchFilter(searchDownloadTextBox.Text);
+        }
 
+        //Фильтрация для поиска
+        private void ApplySearchFilter(string searchText)
+        {
+            if (downloadsView == null) return;
+
+            downloadsView.Filter = item =>
+            {
+                if (string.IsNullOrWhiteSpace(searchText))
+                    return true;
+
+                if (item is PreviewFile file)
+                    return file.FileName.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0;
+
+                return false;
+            };
+
+            downloadsView.Refresh();
+        }
+
+        //Обновление списка загрузок при переключении
         private void MainTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if(e.Source is TabControl tabControl && tabControl.SelectedItem is TabItem tabItem)
             {
-                
+                if(tabItem.Name == "DownloadsTabItem")
+                {
+                    RefreshDownloadList();
+                }
             }
         }
     }

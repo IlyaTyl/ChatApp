@@ -125,7 +125,7 @@
                         <ListBox x:Name="requestFriendsListBox" SelectionChanged="RequestFriendsListBox_SelectionChanged"/>
                     </StackPanel>
                 </TabItem>
-                <TabItem Header="Загрузки">
+                <TabItem Header="Загрузки" Name="DownloadsTabItem">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>

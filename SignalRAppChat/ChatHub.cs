@@ -499,6 +499,30 @@ namespace SignalRAppChat
             return chatDto;
         }
 
+        public async Task DeleteMessage(int messageId)
+        {
+            var message = await context.Messages
+                .FirstOrDefaultAsync(m => m.Id == messageId);
+
+            if (message == null)
+                throw new HubException("Сообщение не найдено.");
+
+            var currentUser = Context.UserIdentifier;
+            if (message.UserName != currentUser)
+                throw new HubException("Удалять можно только свои сообщения.");
+
+            var chat = await context.Chats
+                .Include(c => c.ChatUsers)
+                .ThenInclude(cu => cu.User)
+                .FirstOrDefaultAsync(c => c.Id == message.ChatId);
+
+            context.Messages.Remove(message);
+            await context.SaveChangesAsync();
+
+            var chatId = message.ChatId.ToString();
+            await Clients.Group(chatId).SendAsync("MessageDeleted", messageId);
+        }
+
         //Удаление истории чата
         public async Task ClearChatHistory(int chatId)
         {

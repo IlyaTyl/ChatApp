@@ -88,6 +88,17 @@ namespace WpfClientChat
                     }
                 });
             });
+
+            connection.On<int>("MessageDeleted", (messageId) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    var msg = Messages.FirstOrDefault(m => m.Id == messageId);
+                    if (msg != null)
+                        MessageBox.Show("Удалено");
+                        Messages.Remove(msg);
+                });
+            });
         }
 
         //Загрузка ChatView
@@ -478,9 +489,52 @@ namespace WpfClientChat
         }
 
         //Обработчик нажатие на сообщение правой кнопкой мыши для откртия меню взаимодействия
-        private void chatbox_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        private void chatbox_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-            
+            var listBox = (ListBox)sender;
+
+            var listBoxItem = listBox.ContainerFromElement(e.OriginalSource as DependencyObject) as ListBoxItem;
+
+            if (listBoxItem != null)
+            {
+                listBoxItem.IsSelected = true;
+                if (listBoxItem.DataContext is MessageDto message)
+                {
+                    var menu = CreateMessageContextMenu(message);
+                    menu.PlacementTarget = listBox;
+                    menu.IsOpen = true;
+                }
+            }
+        }
+
+        private ContextMenu CreateMessageContextMenu(MessageDto message)
+        {
+            var menu = new ContextMenu();
+            if (message.UserName == username)
+            {
+                var deletedItem = new MenuItem { Header = "Удалить" };
+                deletedItem.Click += (s, e) => DeleteMessage(message);
+                menu.Items.Add(deletedItem);
+            }
+
+            /*
+             * Для будущей реализации других элементов
+             */
+
+            return menu;
+        }
+
+        private async void DeleteMessage(MessageDto message)
+        {
+            try
+            {
+                await connection.InvokeAsync("DeleteMessage", message.Id);
+                Messages.Remove(message);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при удалении сообщения: {ex.Message}");
+            }
         }
     }
 

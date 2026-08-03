@@ -52,12 +52,25 @@ namespace SignalRAppChat
         }
 
         //Вывод сообщений по чат-id
-        public async Task<List<Message>> GetMessagesByChatId(int chatId)
+        public async Task<List<MessageDto>> GetMessagesByChatId(int chatId)
         {
-            return await context.Messages
+            var messages = await context.Messages
                 .Where(m => m.ChatId == chatId)
                 .OrderBy(m => m.SentAt)
+                .Select(m => new MessageDto
+                {
+                    Id = m.Id,
+                    ChatId = m.ChatId,
+                    UserName = m.UserName,
+                    Text = m.Text,
+                    FilePath = m.FilePath,
+                    OriginalFileName = m.OriginalFileName,
+                    SentAt = m.SentAt,
+                    Type = m.Type
+                })
                 .ToListAsync();
+
+            return messages;
         }
 
         //Вывод чатов у пользователя

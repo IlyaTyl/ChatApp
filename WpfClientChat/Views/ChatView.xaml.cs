@@ -3,6 +3,7 @@ using SignalRAppChat.Shared.Models.Dto;
 using SignalRAppChat.Shared.Models.Entity;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -39,6 +40,8 @@ namespace WpfClientChat
 
         private readonly FileCacheService fileCacheService = new FileCacheService();
 
+        ObservableCollection<MessageDto> Messages { get; set; } = new ObservableCollection<MessageDto>();
+
         public ChatView(HubConnection connection, ChatDto chat, string username)
         {
             this.connection = connection;
@@ -46,6 +49,8 @@ namespace WpfClientChat
             currentChat = chat;
             InitializeComponent();
             SetupTypingHandler();
+
+            chatbox.ItemsSource = Messages;
 
             connection.On<MessageDto>("Receive", (chatMessage) =>
             {
@@ -65,10 +70,10 @@ namespace WpfClientChat
                             }
                         }
 
-                        chatbox.Items.Add(chatMessage);
+                        Messages.Add(chatMessage);
 
                         if (userAtBottom)
-                            chatbox.ScrollIntoView(chatbox.Items[chatbox.Items.Count - 1]);
+                            chatbox.ScrollIntoView(Messages[Messages.Count - 1]);
                     }
                 });
             });
@@ -79,7 +84,7 @@ namespace WpfClientChat
                 {
                     if (currentChat != null && currentChat.Id == chatId)
                     {
-                        chatbox.Items.Clear();
+                        Messages.Clear();
                     }
                 });
             });
@@ -90,7 +95,7 @@ namespace WpfClientChat
         {
             try
             {
-                chatbox.Items.Clear();
+                Messages.Clear();
                 chatTitle.Text = currentChat.Name;
 
                 //Уведомляем сервер, что сообщения прочтены
@@ -98,7 +103,7 @@ namespace WpfClientChat
 
                 //Загружаем историю по ChatId
                 await connection.InvokeAsync("JoinChat", currentChat.Id);
-                var messages = await connection.InvokeAsync<List<Message>>("GetMessagesByChatId", currentChat.Id);
+                var messages = await connection.InvokeAsync<List<MessageDto>>("GetMessagesByChatId", currentChat.Id);
 
                 foreach (var msg in messages.OrderBy(m => m.SentAt))
                 {
@@ -115,12 +120,12 @@ namespace WpfClientChat
                         }
                     }
 
-                    chatbox.Items.Add(msg);
+                    Messages.Add(msg);
                 }
 
-                if (chatbox.Items.Count > 0)
+                if (Messages.Count > 0)
                 {
-                    chatbox.ScrollIntoView(chatbox.Items[chatbox.Items.Count - 1]);
+                    chatbox.ScrollIntoView(Messages[Messages.Count - 1]);
                 }
 
                 if (currentChat.IsGroup)
@@ -300,7 +305,7 @@ namespace WpfClientChat
                     try
                     {
                         await connection.InvokeAsync("ClearChatHistory", currentChat.Id);
-                        chatbox.Items.Clear();
+                        Messages.Clear();
                     }
                     catch (Exception ex)
                     {
@@ -402,10 +407,10 @@ namespace WpfClientChat
             }
         }
 
-        //Сохранение файла в кэш
+        //Обработчик нажатие на кнопку охранения файла в кэш
         private async void OpenFile_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.Tag is Message msg)
+            if (sender is Button btn && btn.Tag is MessageDto msg)
             {
                 try
                 {
@@ -434,9 +439,10 @@ namespace WpfClientChat
             }
         }
 
+        //Обработчик нажатие на кнопку скачивания файла 
         private async void DownloadFile_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.Tag is Message msg)
+            if (sender is Button btn && btn.Tag is MessageDto msg)
             {
                 try
                 {
@@ -469,6 +475,12 @@ namespace WpfClientChat
                     MessageBox.Show($"Ошибка при скачивании: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
+        }
+
+        //Обработчик нажатие на сообщение правой кнопкой мыши для откртия меню взаимодействия
+        private void chatbox_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            
         }
     }
 

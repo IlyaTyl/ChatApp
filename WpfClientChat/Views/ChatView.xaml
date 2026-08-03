@@ -102,7 +102,7 @@
         </DockPanel>
             
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <ListBox x:Name="chatbox" ItemsSource="{Binding Messages}"  ItemTemplateSelector="{StaticResource MessageTemplateSelector}" Height="360" Width="250" Loaded="chatbox_Loaded" ScrollViewer.ScrollChanged="chatbox_ScrollChanged"/>
+            <ListBox x:Name="chatbox" ItemsSource="{Binding Messages}"  ItemTemplateSelector="{StaticResource MessageTemplateSelector}" Height="360" Width="250" Loaded="chatbox_Loaded" ScrollViewer.ScrollChanged="chatbox_ScrollChanged" MouseRightButtonDown="chatbox_MouseRightButtonDown"/>
         </ScrollViewer>
 
         <Grid Grid.Row="2" Background="White">

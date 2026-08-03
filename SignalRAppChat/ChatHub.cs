@@ -498,7 +498,7 @@ namespace SignalRAppChat
             await Clients.Users(allParticipants).SendAsync("ReceiveNewGroupChat", chatDto);
             return chatDto;
         }
-
+        //Удаление сообщения из чата
         public async Task DeleteMessage(int messageId)
         {
             var message = await context.Messages

@@ -421,10 +421,11 @@ namespace WpfClientChat
                         msg.LocalPath = cachedPath;
                     }
 
-                    //Будущая реализация открытия самого файла
-                    //
-                    // ...
-                    //
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = msg.LocalPath,
+                        UseShellExecute = true
+                    });
                 }
                 catch (Exception ex)
                 {
